@@ -120,7 +120,56 @@ innerText 在块级子元素间插分隔符 → 先 `.replace(/\s+/g, '')` 去�
 
 三个项目共用 `supernisy` GitHub 账号 + gh CLI 推送流程(已在用户记忆里登记)。
 
-## 8. 未来扩展方向(留给后续 AI)
+## 8. 与 specgate 配合(实测经验)
+
+`specgate` 管「该验什么」(需求 → 验收契约 → 判定每条是否可机械判定),本仓库管「怎么验」。
+契约在 `acceptance/contract.yaml`,`verify` 字段直接对应本工具的路线:
+
+| specgate verify | 本仓库命令 |
+|---|---|
+| `geo` | `geo-collect` + `geo-compare` |
+| `ax` | `ax-collect` + `ax-diff` |
+| `unit-visual` | `unit-collect` + `ax-diff` |
+| `trace` | `trace-run` + `trace-diff` |
+
+### ★★ 踩过的坑:specgate 的 invariants 必须用**固定变动词表**内的词
+
+`specgate` 判定 invariants 是否为"蜕变关系"时,靠两张固定词表做字符串匹配
+(见 `specgate/src/words.js`):
+
+- **变动词**(描述输入侧变动):`新增 增加 添加 加一 减少 移除 删除 去掉 修改 扩大 缩小 交换 调整 翻倍 拆分 合并 再次 两次 三次 重复 连续 先后 打乱 逆序 变为 改成 换成 之后 同样的 相同入参 同一参数`
+- **关系词**(描述输出侧怎么变):`增加 减少 不变 相同 一致 相等 等于 之和 ...`
+
+实测被拦的写法(都不在词表里,报"没有描述输入侧的变动"):
+
+```
+❌ "父容器可用宽度单调收窄时,boxW 单调不增"      → "收窄" 不在词表
+❌ "容差数值从 0 单调放宽时,FAIL 字段数单调不增" → "放宽" 不在词表
+```
+
+改成词表内的词才通过:
+
+```
+✅ "父容器可用宽度缩小后,采集到的 boxW 不增加"
+✅ "容差数值调整变大后,被判定为 FAIL 的字段数不增加"
+```
+
+另有一条补充模式 `CHANGE_PATTERN = /([^，。；、\s]{2,8})后[，,、]/g`,能捕捉"……后,"结构,
+但会排除副词(`最后/然后/随后/以后/此后/之后`)。写 invariants 时优先用明确的表内动词。
+
+### 迭代流程
+
+```bash
+node ~/.workbuddy/specgate/src/cli.js draft requirement.md   # 产出空白模板 + 填写提示
+# (AI 填写 contract.yaml,每条 accept 标 suspect)
+node ~/.workbuddy/specgate/src/cli.js lint contract.yaml     # 退出 0 才通过,失败看 review.md
+node ~/.workbuddy/specgate/src/cli.js plan contract.yaml     # 产出 impl-task/ + test-task/(物理隔离)
+```
+
+lint 全程零模型、零网络、可复现 —— 同一份契约跑一百次输出完全相同。
+**失败(退出 2)是正常的**,那是门禁在拦"不可验"的需求,按 `review.md` 改即可,不要绕过门禁删条目。
+
+## 9. 未来扩展方向(留给后续 AI)
 
 - 路线 D:WebGL/Canvas 截图局部比对(需要按图层拆分)
 - 暗色模式/高对比度模式自动切换对照

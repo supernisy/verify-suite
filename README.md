@@ -39,6 +39,21 @@ role 几乎没写、div 模拟为主  → 走路线 C (unit-collect)
 
 先跑 `probe-anchors` 看一眼体检数据再定。
 
+## 验收契约(由 specgate 管理)
+
+本项目的验收标准以机器可消费的契约形式落在 [`acceptance/contract.yaml`](./acceptance/contract.yaml),
+由 [specgate](https://github.com/supernisy/specgate) 做确定性门禁(零模型、可复现):
+
+```bash
+node ~/.workbuddy/specgate/src/cli.js lint acceptance/contract.yaml   # 退出 0 = 通过
+node ~/.workbuddy/specgate/src/cli.js plan acceptance/contract.yaml   # 产出 impl-task/ + test-task/
+```
+
+契约里每条 `accept` 的 `verify` 字段直接对应本工具的某条路线:
+`geo` → geo-compare · `ax` → ax-diff · `unit-visual` → unit-collect · `trace` → trace-diff。
+
+> specgate 管「该验什么」,verify-suite 管「怎么验」。
+
 ## 退出码约定
 
 | 码 | 含义 |
