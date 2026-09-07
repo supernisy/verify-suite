@@ -1,0 +1,34 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local artifacts (collect outputs, screenshots, debug dumps)
+out/
+artifacts/
+dumps/
+*.log
+verify-output/
+verify-expected/
+verify-actual/
+*.diff.json
+*.snap.png
+
+# Test fixtures (large HTML pages used as targets)
+fixtures/*.html
+
+# Env
+.env
+.env.local

@@ -1,0 +1,28 @@
+{
+  "name": "verify-suite",
+  "version": "0.1.0",
+  "description": "CDP-based frontend fidelity verification toolkit (visual + interaction). Zero npm dependencies, Node 22+ native WebSocket/fetch.",
+  "type": "module",
+  "bin": {
+    "verify-suite": "./scripts/cdp-client.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "navigate": "node scripts/cdp-client.mjs navigate",
+    "snapshot": "node scripts/cdp-client.mjs snapshot",
+    "assert": "node scripts/cdp-client.mjs assert",
+    "screenshot": "node scripts/cdp-client.mjs screenshot"
+  },
+  "keywords": [
+    "cdp",
+    "chrome-devtools-protocol",
+    "visual-diff",
+    "fidelity-check",
+    "design-qa",
+    "frontend-testing"
+  ],
+  "author": "supernisy <supernisy@users.noreply.github.com>",
+  "license": "MIT"
+}
