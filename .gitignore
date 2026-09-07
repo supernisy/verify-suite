@@ -32,6 +32,9 @@ fixtures/*.html
 # specgate lint 输出的工作副本(每次 lint 都会覆盖,不应入库)
 acceptance/review.md
 
+# render-review.mjs 生成的临时 HTML(截图用的中间产物)
+docs/*.html
+
 # Env
 .env
 .env.local
