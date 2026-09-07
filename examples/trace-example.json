@@ -1,0 +1,62 @@
+{
+  "_comment": "交互轨迹示例。target 用语义指纹 (role|文案) 而非 selector,一份轨迹两侧共用。",
+  "_key_design": [
+    "① target 用语义指纹,不用 selector → 一份轨迹两侧共用(与路线 B 同一套指纹机制)",
+    "② 判据必须是「两侧各自对照同一份语义断言 expect」,而不是「两侧的 diff 是否相同」",
+    "   —— 两侧数据量不同时,'比变化量是否一致'不是可判定命题(实测产生 82 项噪声)"
+  ],
+  "_assertion_kinds": {
+    "urlTail": "归一化后的路径包含该片段(配合 --basename 去掉子应用前缀)",
+    "appeared": "该语义节点在步骤后出现,且步骤前不存在",
+    "disappeared": "该语义节点在步骤前存在,步骤后消失",
+    "visualChanged": "该节点的视觉状态指纹(backgroundColor|fontWeight|boxShadow|color|borderColor)发生变化 —— 只关心'有没有变',不关心变成什么颜色"
+  },
+  "steps": [
+    {
+      "action": "click",
+      "target": "button|定时任务",
+      "label": "导航到定时任务",
+      "await": { "urlContains": "task-center" },
+      "settleMs": 800,
+      "expect": {
+        "urlTail": "task-center",
+        "appeared": ["heading|定时任务", "button|创建任务"],
+        "disappeared": ["heading|数字员工", "button|创建数字员工"],
+        "visualChanged": ["button|定时任务", "button|数字员工"]
+      }
+    },
+    {
+      "action": "click",
+      "target": "button|创建任务",
+      "label": "打开创建任务弹层",
+      "await": { "selector": "[role=dialog]" },
+      "settleMs": 600,
+      "expect": {
+        "appeared": ["dialog|创建任务", "button|提交"],
+        "visualChanged": ["button|创建任务"]
+      }
+    },
+    {
+      "action": "keypress",
+      "target": "Escape",
+      "label": "用 Escape 关闭弹层",
+      "await": {},
+      "settleMs": 400,
+      "expect": {
+        "disappeared": ["dialog|创建任务"]
+      }
+    },
+    {
+      "action": "click",
+      "target": "button|数字员工",
+      "label": "返回数字员工页",
+      "await": { "urlContains": "employee" },
+      "settleMs": 800,
+      "expect": {
+        "urlTail": "employee",
+        "appeared": ["heading|数字员工"],
+        "disappeared": ["heading|定时任务"]
+      }
+    }
+  ]
+}

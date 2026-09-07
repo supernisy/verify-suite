@@ -1,0 +1,56 @@
+{
+  "_comment": "路线 A 探针配置示例。expected/actual 两侧写各自的选择器,让 DOM 结构不同也能对齐。",
+  "_field_notes": {
+    "fields": "要采集的字段。支持 width/height(等价 boxW/boxH)、inLeft/inRight/inTop、iconGap/iconSize、vBias、fontSize/fontWeight/textColor、borderRadius(等价 radius)、bg/hasShadow、direction/gap/childCount",
+    "strict": "零容差字段。离散设计 token(字号/字重/圆角/图标尺寸)差 1 就是选错档,不是抖动",
+    "tolerance": "连续量(位置、被内容撑开的高度)默认容差 ±1px",
+    "ignore": "环境差异字段。top(两侧顶栏高度不同)、childCount(DOM 层级不同)应进 ignore"
+  },
+  "probes": [
+    {
+      "name": "侧边栏导航项",
+      "expected": "aside nav button:first-child",
+      "actual": ".sidebar .menu-item:first-child",
+      "fields": ["width", "height", "inLeft", "fontSize", "borderRadius"],
+      "strict": ["fontSize", "borderRadius"],
+      "tolerance": 1,
+      "ignore": ["top", "childCount"]
+    },
+    {
+      "name": "主按钮",
+      "expected": "button.primary",
+      "actual": "[data-role=primary-action]",
+      "fields": ["width", "height", "inLeft", "inTop", "fontSize", "fontWeight", "borderRadius", "bg"],
+      "strict": ["fontSize", "fontWeight", "borderRadius"],
+      "tolerance": 1,
+      "ignore": ["top"]
+    },
+    {
+      "name": "指标卡片",
+      "expected": ".metric-card",
+      "actual": "div[class*=stat]",
+      "fields": ["width", "height", "inLeft", "inTop", "borderRadius", "hasShadow", "gap", "direction"],
+      "strict": ["borderRadius"],
+      "tolerance": 1,
+      "ignore": ["top"]
+    },
+    {
+      "name": "卡片标题字号",
+      "expected": ".metric-card .title",
+      "actual": "div[class*=stat] > span:first-child",
+      "fields": ["fontSize", "fontWeight", "textColor"],
+      "strict": ["fontSize", "fontWeight"],
+      "tolerance": 0,
+      "ignore": []
+    },
+    {
+      "name": "图标与文字间距",
+      "expected": "aside nav button:first-child",
+      "actual": ".sidebar .menu-item:first-child",
+      "fields": ["iconGap", "iconSize", "vBias"],
+      "strict": ["iconSize"],
+      "tolerance": 1,
+      "ignore": []
+    }
+  ]
+}
