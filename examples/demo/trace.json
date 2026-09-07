@@ -1,0 +1,22 @@
+{
+  "_comment": "最小 demo 的交互轨迹。target 用语义指纹(role|文案),一份轨迹两侧共用。",
+  "_why_fingerprint": "用 selector 的话,DOM 一改轨迹就废;用语义指纹,两侧 DOM 不同也能各自找到对应元素。",
+  "_injected_fault": "产线漏实现「新任务」的点击反馈 —— 设计稿点完出现状态条,产线点完没反应。",
+  "_how_to_read_result": {
+    "✓ 两侧都达成": "交互还原,不用管",
+    "✗ 仅一侧不达成": "改代码(是实现的 bug,不是断言写错)",
+    "⚠️ 两侧都不达成": "改断言(大概率是断言写错了,不是实现的问题)"
+  },
+  "steps": [
+    {
+      "action": "click",
+      "target": "button|新任务",
+      "label": "点击「新任务」按钮",
+      "await": {},
+      "settleMs": 300,
+      "expect": {
+        "appeared": ["heading|任务已创建"]
+      }
+    }
+  ]
+}

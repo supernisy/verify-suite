@@ -1,0 +1,38 @@
+{
+  "_comment": "最小 demo 的探针配置。两侧 DOM 同构,故 expected/actual 写同一个 selector。",
+  "_injected_faults": [
+    "页面标题 fontSize: 设计稿 20px → 产线 18px(离散 token,零容差必抓)",
+    "主按钮 padding-left: 设计稿 12px → 产线 8px(连续量,±1px 容差外)",
+    "文案: 设计稿「技能」→ 产线「技能市场」(由 ax-diff 的模糊档抓)",
+    "产线多出「删除」按钮(由 ax-diff 的仅实测档抓)"
+  ],
+  "probes": [
+    {
+      "name": "页面标题",
+      "expected": "h1",
+      "actual": "h1",
+      "fields": ["fontSize", "fontWeight"],
+      "strict": ["fontSize", "fontWeight"],
+      "tolerance": 0,
+      "ignore": []
+    },
+    {
+      "name": "主按钮·新任务",
+      "expected": "[data-testid=btn-new]",
+      "actual": "[data-testid=btn-new]",
+      "fields": ["inLeft", "fontSize", "borderRadius", "boxH"],
+      "strict": ["fontSize", "borderRadius"],
+      "tolerance": 1,
+      "ignore": ["top"]
+    },
+    {
+      "name": "次按钮·技能",
+      "expected": "[data-testid=btn-skill]",
+      "actual": "[data-testid=btn-skill]",
+      "fields": ["inLeft", "fontSize", "borderRadius"],
+      "strict": ["fontSize", "borderRadius"],
+      "tolerance": 1,
+      "ignore": ["top"]
+    }
+  ]
+}

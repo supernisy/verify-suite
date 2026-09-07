@@ -285,6 +285,19 @@ export const MEASURE_FN = `function(){
             textEl = cur;
         }
     })();
+    // ★ 兜底:el 自己没有元素子节点含文本(纯文本节点场景,如 <button>新任务</button>),
+    //   用 Range 测第一个非空文本节点的 rect。el.children 只看元素节点,看不到文本节点。
+    if (textEl === el) {
+        try {
+            const tn = Array.from(el.childNodes).find(n =>
+                n.nodeType === 3 && n.nodeValue && n.nodeValue.replace(/\\s/g,'').length > 0);
+            if (tn) {
+                const range = document.createRange();
+                range.selectNodeContents(tn);
+                textEl = { getBoundingClientRect: () => range.getBoundingClientRect() };
+            }
+        } catch (_) {}
+    }
     const tr = textEl.getBoundingClientRect();
 
     // 图标:取最近的 svg / img(限自身子树内)

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>数字员工控制台 · 设计稿</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", sans-serif;
+    background: #f7f8fa; padding: 24px;
+  }
+  .panel {
+    width: 320px; background: #fff;
+    border-radius: 8px; padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  h1 { font-size: 20px; font-weight: 600; color: #1f2329; margin-bottom: 16px; }
+  .btn {
+    display: block; width: 100%; height: 36px;
+    padding-left: 12px; text-align: left;
+    font-size: 14px; font-weight: 500;
+    border: none; border-radius: 6px;
+    background: #3b82f6; color: #fff;
+    margin-bottom: 8px; cursor: pointer;
+  }
+  .btn.ghost { background: transparent; color: #1f2329; }
+</style>
+</head>
+<body>
+  <div class="panel">
+    <h1>数字员工</h1>
+    <button class="btn" data-testid="btn-new">新任务</button>
+    <button class="btn ghost" data-testid="btn-skill">技能</button>
+  </div>
+  <script>
+    // 设计稿约定：点「新任务」后出现状态条
+    document.querySelector('[data-testid=btn-new]')
+      .addEventListener('click', function () {
+        var t = document.createElement('h3');
+        t.id = 'toast';
+        t.textContent = '任务已创建';
+        t.style.cssText = 'margin:12px 0 0;padding:8px 12px;background:#ecfdf5;'
+          + 'color:#065f46;border-radius:6px;font-size:13px;font-weight:600;';
+        document.querySelector('.panel').appendChild(t);
+      });
+  </script>
+</body>
+</html>

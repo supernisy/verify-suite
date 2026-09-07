@@ -176,3 +176,19 @@ lint 全程零模型、零网络、可复现 —— 同一份契约跑一百次�
 - 录制回放:把 trace-run 的执行序列转成可独立回放的脚本
 - 把 `ax-diff` 的报告输出成 GitHub Actions 的 PR 评论(已留退出码 2 接口)
 - 浏览器侧集成:支持 Safari(WebKit)、Firefox(Gecko)的 CDP-like 协议
+
+## 10. 已知 bug 修复(给后续 AI 留排查路线)
+
+### 10.1 `inLeft` 对纯文本子节点测不出
+
+**症状**:对 `<button>新任务</button>`(只有文本子节点,无元素子节点)这种组件,
+`geo-collect` 采到的 `inLeft = 0`,无论 padding-left 写多少。
+
+**根因**:`scripts/lib/cdp.mjs` 里的 `MEASURE_FN` 用 `el.children` 找"含文本的最内层子元素"作为 textEl。
+`el.children` **只包含元素节点**,不包含文本节点。纯文本场景下 `kids = []`,`textEl` 保持为 `el` 本身,
+`inLeft = textEl.left - el.left = 0`。
+
+**修法**:在 textEl 仍是 `el` 时,fallback 用 `Range.selectNodeContents()` 测第一个非空文本节点的 rect。
+
+**复现**:`bash examples/demo/run-demo.sh`,看路线 A 的「主按钮·新任务」之前 inLeft=0 vs inLeft=0 都 PASS;
+修完之后才看到「产线 8 ←→ 设计稿 12 (产线偏小 -4)」。

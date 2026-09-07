@@ -29,6 +29,9 @@ verify-actual/
 # Test fixtures (large HTML pages used as targets)
 fixtures/*.html
 
+# specgate lint 输出的工作副本(每次 lint 都会覆盖,不应入库)
+acceptance/review.md
+
 # Env
 .env
 .env.local

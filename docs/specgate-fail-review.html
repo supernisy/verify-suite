@@ -1,0 +1,61 @@
+<!doctype html><meta charset="utf-8">
+<title>specgate FAIL</title>
+<style>
+  body { font: 14px/1.6 -apple-system, "Microsoft YaHei", sans-serif;
+         background: #f8fafc; padding: 32px; max-width: 920px; margin: 0 auto; color: #0f172a; }
+  h1 { font-size: 22px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin: 0 0 16px; }
+  h2 { font-size: 17px; margin: 24px 0 8px; color: #b91c1c; }
+  h3 { font-size: 15px; margin: 16px 0 8px; color: #1e293b; }
+  ul { padding-left: 22px; margin: 8px 0; }
+  li { margin: 4px 0; }
+  blockquote { color: #475569; border-left: 3px solid #cbd5e1; padding: 4px 12px; margin: 0; }
+  code { font-family: ui-monospace, Consolas, monospace; background: #f1f5f9; padding: 1px 6px; border-radius: 4px; }
+  pre, .md { font-family: ui-monospace, Consolas, monospace;
+             background: #0f172a; color: #e2e8f0; padding: 16px; border-radius: 8px;
+             white-space: pre-wrap; word-break: break-word; font-size: 13px;
+             line-height: 1.55; }
+  em { font-style: normal; color: #64748b; }
+  strong { color: #0f172a; }
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
+</style>
+<body>
+<div class="md"># specgate review · verify-suite
+
+&gt; 约束源：内置默认（未找到 constraints.yaml）
+
+## 需要修改（3 处）
+
+### [⑥ invariants 有效] A1
+- 当前原文（invariants[0]）：采集结果始终是数字类型
+- 问题：没有描述输入侧的变动，这是普通断言而非蜕变关系（且全句命中恒真词，写成测试后永远通过，是废话）
+- 可套用的五类句式（选最贴近的照抄）：
+  · 增量关系：新增 / 删除一项后，结果相应 +1 / -1
+  · 幂等性：相同入参连续调用两次，结果完全相同
+  · 单调性：范围扩大后，结果不减少
+  · 可加性：按维度拆分后，各组之和等于总数
+  · 对称性：输入顺序打乱后，结果一致
+- 你不需要把答案想清楚，只需要写出输入变了结果该怎么变。
+
+### [⑥ invariants 有效] A5
+- 当前原文（invariants[0]）：输出行不为空
+- 问题：没有描述输入侧的变动，这是普通断言而非蜕变关系（且全句命中恒真词，写成测试后永远通过，是废话）
+- 可套用的五类句式（选最贴近的照抄）：
+  · 增量关系：新增 / 删除一项后，结果相应 +1 / -1
+  · 幂等性：相同入参连续调用两次，结果完全相同
+  · 单调性：范围扩大后，结果不减少
+  · 可加性：按维度拆分后，各组之和等于总数
+  · 对称性：输入顺序打乱后，结果一致
+- 你不需要把答案想清楚，只需要写出输入变了结果该怎么变。
+
+### [⑥ invariants 有效] A9
+- 当前原文（invariants[0]）：退出码应当是整数
+- 问题：没有描述输入侧的变动，这是普通断言而非蜕变关系（且全句命中恒真词，写成测试后永远通过，是废话）
+- 可套用的五类句式（选最贴近的照抄）：
+  · 增量关系：新增 / 删除一项后，结果相应 +1 / -1
+  · 幂等性：相同入参连续调用两次，结果完全相同
+  · 单调性：范围扩大后，结果不减少
+  · 可加性：按维度拆分后，各组之和等于总数
+  · 对称性：输入顺序打乱后，结果一致
+- 你不需要把答案想清楚，只需要写出输入变了结果该怎么变。
+</div>
+</body>
