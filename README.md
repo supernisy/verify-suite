@@ -1,5 +1,7 @@
 # verify-suite
 
+![specgate 验收门禁](https://github.com/supernisy/verify-suite/actions/workflows/specgate-gate.yml/badge.svg)
+
 > **判定层**为主,CDP 只是**当前唯一的采集适配器**。
 > 给前端页面对设计稿 demo 做**视觉还原** + 对 PRD 做**交互还原**,输出**可判定**的差异报告。
 
@@ -204,6 +206,16 @@ node src/cli.js lint /path/to/verify-suite/acceptance/contract.yaml       # 退�
 *坏契约被拦:3 条 invariants(A1/A5/A9)被判恒真废话,逐一给出修改建议。通过态见 [specgate 的 PASS 截图](https://github.com/supernisy/specgate/blob/main/docs/specgate-pass-review.png)。*
 
 > 这份契约就是 verify-suite 自己的验收门禁:落在 `acceptance/` 下,由 specgate `lint` 把门、`plan` 切出 `impl-task/` 与 `test-task/` 两个物理隔离任务包。
+
+### PR 自动门禁（无需手动跑）
+
+门禁已接进 CI:任何改动 `acceptance/` 下契约的 PR,都会先过 specgate `lint`,
+契约不合格 → 检查失败 → PR 不允许合并。
+
+- 工作流:[`.github/workflows/specgate-gate.yml`](./.github/workflows/specgate-gate.yml)
+- 自动发现 `acceptance/*.yaml` 并逐一 `lint`,**跳过** `*-bad.yaml`(故意坏样本)与 `*.draft.yaml`(草稿)。
+- 克隆 [supernisy/specgate](https://github.com/supernisy/specgate) 后 `npm install`(依赖 `yaml`),再 `node src/cli.js lint <契约>`。
+- 本地想提前自检,命令与上方「实际跑一遍」完全一致。
 
 ## 文档导航
 
