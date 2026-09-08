@@ -15,7 +15,7 @@
 //   ② ★★ 判据是「两侧各自对照同一份语义断言」,不是「两侧的 diff 是否相同」
 //      (两侧数据量不同时,"比变化量是否一致"不是可判定命题 —— 实测 82 项噪声)
 
-import { argValue, hasFlag } from './lib/args.mjs';
+import { argValue, hasFlag, argNumber } from './lib/args.mjs';
 import {
     withSession, fixViewport, addPreload,
     navigateAndWait, waitForSelector, waitForUrlContains, waitRAF, sleep,
@@ -141,7 +141,11 @@ async function main() {
 
 用法:
   node scripts/trace-run.mjs --url <url> --trace <trace.json> --side <expected|actual>
-       [--basename <str>] [--preload <js>] [--wait <sel>] [--viewport] --out <file>
+       [--basename <str>] [--preload <js>] [--wait <sel>] [--viewport]
+       [--no-progress-k <n>] --out <file>
+
+--no-progress-k  连续 n 步语义快照完全相同时判定为「卡住」并中止(默认 3)。
+                 防止点击没生效却跑完全程、产出一串假的「未达成」。
 
 轨迹格式:
 {
@@ -195,6 +199,12 @@ async function main() {
 
         const stepResults = [];
         let prev = await snapshot(session);
+
+        // P2-6 无进展检测:连续 K 步语义快照完全相同 = 页面卡住了
+        // (点击没生效 / 路由没跳转 / 弹层挡住了)。继续跑完只会得到一串
+        // 「未达成」的假结论 —— 真因是执行卡住,不是实现有差异。
+        const noProgressK = argNumber(argv, '--no-progress-k', 3);
+        const snapHistory = [];
 
         for (let i = 0; i < steps.length; i++) {
             const st = steps[i];
@@ -276,12 +286,42 @@ async function main() {
                 action: st.action,
                 path,
                 nodesAfter: after.items.length,
+                // P1-5 证据等级:轨迹断言建立在语义快照(AX 树指纹)之上。
+                // 快照节点过少 = 这一页没被语义化,断言其实没有证据支撑。
+                evidence: 'ax-tree',
+                confidence: after.items.length >= 3 ? 'high' : 'medium',
                 assertions,
                 allOk: assertions.every(a => a.ok),
             });
+
+            // P2-6:这一步跑完了,检查是否卡住
+            snapHistory.push(after.items.map(x => `${x.fp}#${x.fpIndex}`).join('|'));
+            if (snapHistory.length >= noProgressK) {
+                const tail = snapHistory.slice(-noProgressK);
+                if (tail.every(s => s === tail[0])) {
+                    throw new Error(
+                        `无进展:连续 ${noProgressK} 步语义快照完全相同(第 ${i - noProgressK + 2}~${i + 1} 步)`
+                        + ` — 页面可能卡住(点击未生效 / 路由未跳转 / 被弹层遮挡)。`
+                        + `继续执行只会产出假结论,已中止。可调大 --no-progress-k 放宽`);
+                }
+            }
         }
 
-        return { side, url, basename, collectedAt: new Date().toISOString(), steps: stepResults };
+        return {
+            side, url, basename,
+            collectedAt: new Date().toISOString(),
+            steps: stepResults,
+            evidence: {
+                primary: 'ax-tree',
+                confidence: stepResults.every(s => s.confidence === 'high') ? 'high' : 'medium',
+            },
+            // P1-5 降级留痕:某步快照节点过少,说明这一步的断言没有足够证据
+            degradation: stepResults.some(s => s.confidence === 'medium') ? {
+                from: 'ax-tree',
+                to: 'text-skeleton',
+                reason: `有步骤的语义快照节点数 < 3（${stepResults.filter(s => s.confidence === 'medium').map(s => s.label).join(', ')}）— 该步断言依据不足`,
+            } : null,
+        };
     });
 
     const total = result.steps.reduce((s, x) => s + x.assertions.length, 0);

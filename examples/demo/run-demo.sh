@@ -65,6 +65,17 @@ node scripts/trace-diff.mjs "$OUT/tr-demo.json" "$OUT/tr-prod.json"
 echo "退出码=$?"
 echo
 
+# --- 4.5 路线 E：行为契约（视觉一模一样也可能行为不同） --------------------
+echo "########## 路线 E · 行为契约（埋点/请求/响应结构） ##########"
+node scripts/behavior-collect.mjs --url "$BASE/demo.html" --behavior examples/demo/behavior.json \
+  --side expected --out "$OUT/bh-demo.json"
+node scripts/behavior-collect.mjs --url "$BASE/prod.html" --behavior examples/demo/behavior.json \
+  --side actual --out "$OUT/bh-prod.json"
+node scripts/behavior-diff.mjs "$OUT/bh-demo.json" "$OUT/bh-prod.json" \
+  --behavior examples/demo/behavior.json --label-exp 设计稿 --label-act 产线
+echo "退出码=$?"
+echo
+
 # --- 5. 截图 ---------------------------------------------------------------
 echo "########## 截图 ##########"
 node examples/demo/shot.mjs "$BASE/demo.html" docs/demo.png
@@ -107,6 +118,22 @@ node scripts/geo-compare.mjs "$OUT/empty-a.json" "$OUT/empty-b.json" \
 check_exit "geo-compare  空输入" 1 "$?"
 node scripts/trace-diff.mjs "$OUT/empty-tr.json" "$OUT/empty-tr.json" >/dev/null 2>&1
 check_exit "trace-diff   空输入" 1 "$?"
+
+# 路线 E 同样适用：目标不存在 / 全程零观测 = 采集失败，不是"没有行为"
+node scripts/behavior-collect.mjs --url "$BASE/blank.html" \
+  --behavior examples/demo/behavior.json --side expected \
+  --out "$OUT/bh-blank.json" >/dev/null 2>&1
+check_exit "behavior-collect 空白页" 1 "$?"
+printf '{"side":"expected","steps":[]}' > "$OUT/empty-bh.json"
+node scripts/behavior-diff.mjs "$OUT/empty-bh.json" "$OUT/empty-bh.json" \
+  --behavior examples/demo/behavior.json >/dev/null 2>&1
+check_exit "behavior-diff 空输入" 1 "$?"
+
+# P2-6 无进展检测：连点 3 次无反应的按钮，应判「卡住」中止而不是跑完出假结论
+node scripts/trace-run.mjs --url "$BASE/demo.html" \
+  --trace examples/demo/trace-no-progress.json --side expected \
+  --out "$OUT/tr-noprog.json" >/dev/null 2>&1
+check_exit "trace-run 无进展中止" 1 "$?"
 
 echo
 echo "自检结果: $SELF_PASS 通过 / $SELF_FAIL 失败"

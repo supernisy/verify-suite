@@ -1,6 +1,6 @@
 ---
 name: verify-suite
-description: 基于 CDP 的前端还原度校验工具集。判定页面对设计稿 demo 的视觉还原度与对 PRD 的交互还原度,输出可判定的差异报告。当用户要「对比两个页面的还原度」「验证实现和原型是否一致」「检查视觉还原 / 交互还原」「跑一遍前端验收」时使用。
+description: 前端还原度判定工具集(判定层为主,CDP 为当前采集适配器)。判定页面对设计稿 demo 的视觉还原度与对 PRD 的交互还原度,输出可判定的差异报告。当用户要「对比两个页面的还原度」「验证实现和原型是否一致」「检查视觉还原 / 交互还原」「跑一遍前端验收」时使用。
 version: 0.1.0
 type: tool
 ---
@@ -89,6 +89,23 @@ node scripts/geo-collect.mjs --url http://prod.local --probes examples/probes-ex
   --side actual --out geo-act.json
 node scripts/geo-compare.mjs geo-exp.json geo-act.json examples/probes-example.json
 ```
+
+### 4. 行为还原(路线 E · 视觉对上了但行为可能不同)
+
+```bash
+# 断言写在 behavior 配置里,两侧各自对照同一份
+node scripts/behavior-collect.mjs --url http://demo.local \
+  --behavior examples/behavior-example.json --side expected --out bh-exp.json
+node scripts/behavior-collect.mjs --url http://prod.local \
+  --behavior examples/behavior-example.json --side actual --out bh-act.json
+node scripts/behavior-diff.mjs bh-exp.json bh-act.json \
+  --behavior examples/behavior-example.json --label-exp demo --label-act 产线
+```
+
+配置里可断言四类:**network**(方法 / URL 正则 / body 关键字段)、**console**(正则匹配埋点,最刚需)、
+**schema**(响应字段存在性 + 类型)、**artifacts**(产物文件存在性与大小)。
+
+> ★ 只断言结构,不断言业务数值。id 等于几、金额多少是业务测试的事 —— 还原度断言写业务数值会瞬间腐烂。
 
 ## 命令参考
 
@@ -192,19 +209,43 @@ demo 侧走 mock server 而非硬编码:① 硬编码演示不了 loading/空态
 同一 assert 连续失败不要重复执行,应分析原因
 ```
 
+### 12. 空结果不是「无差异」,是「执行错误」
+
+采集到 0 个节点、或低于 `--min-items`(默认 3),一律退出码 **1**,绝不落 0。
+
+失效链:preload 静默失效 → 采到空快照 → 两侧都空 → diff 判"无差异"退出 0 → **误报通过**。
+比对器任一侧输入为空也一样判 1。宁可吵,不可假绿。
+
+### 13. 别让判定层依赖驱动层
+
+判定层(比对器)不得 import `lib/cdp.mjs` —— 用到里面的纯函数就迁到 `lib/args.mjs` /
+`lib/tolerance.mjs` / `lib/evidence.mjs`,再从判据层引。由 `npm run check:layering` 强制。
+
+理由:驱动能力会被商品化、可替换;判定能力才是资产。判据长在执行脚本里,换一次驱动就要重写一遍。
+耦合是渐进发生的(某天顺手 import 一个工具函数),只能交给 CI 守。
+
+### 14. 无进展时要中止,不要跑完
+
+`trace-run` 连续 3 步(`--no-progress-k` 可调)语义快照完全相同 → 判定卡住,退出码 1。
+继续跑完只会产出一串"未达成",把「执行卡住」伪装成「实现有差异」—— 这比报错更糟。
+
 ## 退出码
 
 | 码 | 含义 |
 |---|---|
 | 0 | 无差异 / 全部断言达成 |
-| 1 | 执行错误(目标未找到、页面加载失败、参数错误) |
+| 1 | 执行错误(目标未找到、页面加载失败、参数错误、**采集为空**、检测到无进展) |
 | 2 | 检出差异 / 断言未达成(便于接 CI 门禁) |
 
 ## 能力边界(不要过度承诺)
 
-**已覆盖**:静态视觉几何比对 · 语义节点对齐 · 交互迁移(轨迹) · 层级归属 · 弹层定位与可见性
+**已覆盖**:静态视觉几何比对 · 语义节点对齐 · 交互迁移(轨迹) · 行为契约(埋点/请求/响应结构/产物) · 层级归属 · 弹层定位与可见性
 
 **不覆盖**:单元测试逻辑 · 性能/内存 · 可访问性合规审计 · WebGL/Canvas 内容(需按图层拆分) · 暗色/高对比度模式自动对照 · 纯像素级质感(渐变、阴影质感、插画细节)
+
+> 每条结论都带 `evidence`(computed-style / ax-tree / text-skeleton / network / console / pixel)
+> 与 `confidence`(high / medium / low)。一次比对的可信度取**所有 item 里最低的那一档**,汇总行会打印。
+> 发生降级(预期无障碍树但角色不足,落到文本骨架)时报告写 `degradation` 字段说明原因,**不静默降级**。
 
 ## 与 specgate 配合
 

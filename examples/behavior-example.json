@@ -1,0 +1,51 @@
+{
+  "name": "行为契约示例(四类观测点全展示)",
+  "note": "这是「字段说明」示例,不是可直接跑的 demo(跑 demo 见 examples/demo/behavior.json)。断言只判结构:字段存不存在、类型对不对;不判业务数值。",
+  "steps": [
+    {
+      "label": "点击「新任务」",
+      "action": {
+        "kind": "click",
+        "target": "[data-testid=btn-new]"
+      },
+      "settleMs": 800,
+      "expect": {
+        "network": [
+          {
+            "method": "POST",
+            "urlPattern": "/api/task",
+            "bodyFields": ["title", "assignee"]
+          }
+        ],
+        "console": [
+          { "pattern": "task_create" },
+          { "pattern": "task_created id=" }
+        ],
+        "schema": [
+          {
+            "urlPattern": "/api/task",
+            "fields": [
+              { "path": "data.id", "type": "string" },
+              { "path": "data.title" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "label": "导出任务列表",
+      "action": {
+        "kind": "click",
+        "target": "button|导出"
+      },
+      "expect": {
+        "network": [
+          { "method": "GET", "urlPattern": "/api/task/export" }
+        ],
+        "artifacts": [
+          { "path": "out/tasks.xlsx", "minBytes": 1024 }
+        ]
+      }
+    }
+  ]
+}

@@ -16,6 +16,7 @@
 // 退出码: 0 无差异 | 1 执行错误 | 2 检出差异
 
 import { argValue, hasFlag } from './lib/args.mjs';
+import { summarizeEvidence } from './lib/evidence.mjs';
 
 /**
  * ★ 容器类 role 只能比自身尺寸。
@@ -249,6 +250,8 @@ async function main() {
 
     console.log(lines.join('\n'));
     console.log(`汇总: 差异项 ${diffCount} · 仅基准 ${stillExp.length} · 仅实测 ${onlyAct.length}`);
+    // P1-5:结论必须标注它依据的最低证据档位,以及是否发生过降级
+    console.log(summarizeEvidence([exp, act]).line);
 
     if (jsonOut) {
         await fs.writeFile(jsonOut, JSON.stringify({

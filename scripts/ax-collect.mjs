@@ -138,13 +138,21 @@ async function main() {
             const cnt = counters.get(fp) ?? 0;
             counters.set(fp, cnt + 1);
 
+            // P1-5 证据等级:主键来自无障碍树,几何来自运行时计算样式。
+            // role 缺失(或 generic/None)意味着这个节点在这一档上「没有身份」,
+            // 只能靠位置与文案对齐 → 可信度降为 medium(降级必须留痕,见下方 degradation)
+            const roleVal = n.role?.value;
+            const hasIdentity = !!roleVal && !['generic', 'None', 'presentation'].includes(roleVal);
+
             items.push({
                 fp,
                 fpIndex: cnt,
-                role: n.role?.value,
+                role: roleVal,
                 name: name.slice(0, 120),
                 normName,
                 grid: g,
+                evidence: 'ax-tree',
+                confidence: hasIdentity ? 'high' : 'medium',
                 ...m,
             });
         }
@@ -152,12 +160,30 @@ async function main() {
         // 视觉阅读顺序排序 + 编号
         items.sort((a, b) => (a.grid.gy - b.grid.gy) || (a.grid.gx - b.grid.gx));
 
+        // P1-5 降级留痕:AX 树里大量节点没有有效 role 时,说明这一档拿不到身份,
+        // 结论颗粒度必然变粗 —— 必须写进报告,严禁静默降级。
+        const noIdentity = items.filter(i => i.confidence === 'medium').length;
+        const identityRatio = items.length ? 1 - noIdentity / items.length : 0;
+        const degraded = identityRatio < 0.5;
+
         return {
             url,
             scope: scope ?? null,
             viewport: vp,
             collectedAt: new Date().toISOString(),
             count: items.length,
+            evidence: {
+                primary: 'ax-tree',
+                confidence: degraded ? 'medium' : 'high',
+                byItem: { high: items.length - noIdentity, medium: noIdentity },
+            },
+            // 降级才写这个字段;没降级就是 null,让读报告的人一眼看到"没降级"
+            degradation: degraded ? {
+                from: 'ax-tree',
+                to: 'text-skeleton',
+                reason: `${items.length} 个节点中 ${noIdentity} 个无有效 role(语义化比例 ${(identityRatio * 100).toFixed(0)}%) — 该页面不适合路线 B,建议改用 unit-collect(路线 C)`,
+                identityRatio,
+            } : null,
             items,
         };
     });

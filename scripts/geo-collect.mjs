@@ -169,8 +169,15 @@ async function main() {
         await waitRAF(session);
 
         const items = [];
+        const missing = [];
         for (const p of probes) {
-            items.push(await collectProbe(session, p, side));
+            const it = await collectProbe(session, p, side);
+            // P1-5 证据等级:探针由人指定,度量直接来自运行时计算样式 —— 最高档。
+            // 探针没命中(missing)不是"无差异",是这条判据失去了证据,单独记下来。
+            it.evidence = it.missing ? 'none' : 'computed-style';
+            it.confidence = it.missing ? 'low' : 'high';
+            if (it.missing) missing.push(it.name);
+            items.push(it);
         }
         return {
             side,
@@ -178,6 +185,18 @@ async function main() {
             viewport: vp,
             collectedAt: new Date().toISOString(),
             count: items.length,
+            evidence: {
+                primary: 'computed-style',
+                confidence: missing.length ? 'medium' : 'high',
+                byItem: { high: items.length - missing.length, low: missing.length },
+            },
+            // P1-5 降级留痕:探针没命中必须写明,不能假装没这事
+            degradation: missing.length ? {
+                from: 'computed-style',
+                to: 'none',
+                reason: `${missing.length} 个探针未定位到元素(${missing.slice(0, 5).join(', ')}${missing.length > 5 ? '…' : ''}) — 这些项没有证据支撑,结论不可信`,
+                missingProbes: missing,
+            } : null,
             items,
         };
     });

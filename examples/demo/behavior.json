@@ -1,0 +1,20 @@
+{
+  "name": "创建任务行为契约",
+  "note": "断言由人写。只断言结构(有没有这条埋点 / 请求),不断言业务数值(id 等于几不判 —— 那是业务测试的事)。",
+  "steps": [
+    {
+      "label": "点击「新任务」",
+      "action": {
+        "kind": "click",
+        "target": "[data-testid=btn-new]"
+      },
+      "settleMs": 500,
+      "expect": {
+        "console": [
+          { "pattern": "task_create" },
+          { "pattern": "task_created id=" }
+        ]
+      }
+    }
+  ]
+}

@@ -262,6 +262,12 @@ async function main() {
                 kind: it.kind,
                 unitKind: it.unitKind,
                 iconHash: it.iconHash,
+                // P1-5 证据等级:路线 C 的主键是「归一化文案 + 网格位置」,不是 role ——
+                // 拿不到语义身份,所以证据档位本身就是 text-skeleton。
+                evidence: 'text-skeleton',
+                // native(原生交互标签) / click(React onClick) 是硬证据;
+                // pointer(仅 cursor 推断) 与纯文本只是推断 → medium
+                confidence: (it.unitKind === 'native' || it.unitKind === 'click') ? 'high' : 'medium',
                 boxW: it.boxW, boxH: it.boxH,
                 inLeft: it.inLeft, inRight: it.inRight, inTop: it.inTop,
                 iconGap: it.iconGap, iconSize: it.iconSize, vBias: it.vBias,
@@ -272,12 +278,30 @@ async function main() {
         });
         items.sort((a, b) => (a.grid.gy - b.grid.gy) || (a.grid.gx - b.grid.gx));
 
+        const nHigh = items.filter(i => i.confidence === 'high').length;
+
         return {
             url,
             scope: scope ?? null,
             viewport: vp,
             collectedAt: new Date().toISOString(),
             count: items.length,
+            evidence: {
+                primary: 'text-skeleton',
+                // 路线 C 整体比路线 B 低一档:无语义身份,靠文案 + 位置对齐
+                confidence: 'medium',
+                byItem: { high: nHigh, medium: items.length - nHigh },
+            },
+            // P1-5 降级留痕:选用路线 C 本身就是一次降级(预期走 AX 树但 role 不足),
+            // 必须写进报告,严禁静默降级 —— 读报告的人要知道结论颗粒度已经变粗。
+            degradation: {
+                from: 'ax-tree',
+                to: 'text-skeleton',
+                reason: '主动降级:页面语义化不足(实测此类项目 div 模拟交互占 74%~90%),'
+                    + '拿不到 role 身份,主键退化为「归一化文案 + 网格位置」。'
+                    + '失去语义身份后只能判「文案与位置是否对得上」,判不了「是不是同一个语义元素」。',
+                identityRatio: 0,
+            },
             items,
             stats: raw.stats,
         };

@@ -11,6 +11,7 @@
 
 import { argValue, hasFlag } from './lib/args.mjs';
 import { toleranceFor } from './lib/tolerance.mjs';
+import { summarizeEvidence } from './lib/evidence.mjs';
 
 /**
  * ★★ 方向标注(文档 §4.4):必须写出哪边是哪边。
@@ -141,6 +142,8 @@ async function main() {
     console.log(lines.join('\n'));
     console.log('');
     console.log(`汇总: 通过 ${passed} · 差异 ${failed}`);
+    // P1-5:结论必须标注它依据的最低证据档位,以及是否发生过降级
+    console.log(summarizeEvidence([exp, act]).line);
     if (failed > 0) {
         console.log(`结论: 检出差异,退出码 2`);
         process.exitCode = 2;

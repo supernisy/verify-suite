@@ -23,6 +23,7 @@
 // 退出码: 0 全部两侧达成 | 1 执行错误 | 2 检出差异/断言未达成
 
 import { argValue, hasFlag } from './lib/args.mjs';
+import { summarizeEvidence } from './lib/evidence.mjs';
 
 async function main() {
     const argv = process.argv.slice(2);
@@ -118,6 +119,12 @@ async function main() {
     console.log(`  ✓ 两侧都达成      ${bothOk}   → 行为等价`);
     console.log(`  ✗ 仅一侧不达成    ${oneSideFail}   → 真差异,改代码`);
     console.log(`  ⚠ 两侧都不达成    ${bothFail}   → 断言写错了,改断言(不是改代码)`);
+    // P1-5:结论必须标注它依据的最低证据档位,以及是否发生过降级
+    // 轨迹的证据在 step 级,这里把 steps 当作 items 传给汇总器
+    console.log(summarizeEvidence([
+        { ...exp, items: exp.steps },
+        { ...act, items: act.steps },
+    ]).line);
 
     if (bothFail > 0 && oneSideFail === 0) {
         console.log('');

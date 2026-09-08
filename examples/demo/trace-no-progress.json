@@ -1,0 +1,24 @@
+{
+  "name": "无进展自检用轨迹",
+  "note": "故意连点 3 次同一个不带事件监听的按钮 —— 页面状态不会变化。期望 trace-run 在第 3 步判定「无进展」并中止(退出码 1),而不是跑完全程产出假的「未达成」。",
+  "steps": [
+    {
+      "action": "click",
+      "target": "button|技能",
+      "label": "第1次点技能(无反应)",
+      "settleMs": 200
+    },
+    {
+      "action": "click",
+      "target": "button|技能",
+      "label": "第2次点技能(无反应)",
+      "settleMs": 200
+    },
+    {
+      "action": "click",
+      "target": "button|技能",
+      "label": "第3次点技能(无反应)",
+      "settleMs": 200
+    }
+  ]
+}

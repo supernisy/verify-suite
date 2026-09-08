@@ -38,8 +38,14 @@
     <button class="btn ghost" data-testid="btn-del">删除</button>
   </div>
   <script>
-    // ⚠️ 故障注入：产线漏实现了「新任务」的点击反馈
-    // （设计稿有状态条，产线点了没反应 —— trace-diff 应判为 ✗ 改代码）
+    // ⚠️ 故障注入 1：产线漏实现了「新任务」的点击反馈
+    //    （设计稿有状态条，产线点了没反应 —— trace-diff 应判为 ✗ 改代码）
+    // ⚠️ 故障注入 2：埋点只发了一条，漏了「创建结果」确认埋点
+    //    （behavior-diff 应判为 ✗ 仅产线未达成 —— 视觉上看不出来）
+    document.querySelector('[data-testid=btn-new]')
+      .addEventListener('click', function () {
+        console.log('track: task_create');
+      });
   </script>
 </body>
 </html>

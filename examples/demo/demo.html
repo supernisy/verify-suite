@@ -42,6 +42,10 @@
         t.style.cssText = 'margin:12px 0 0;padding:8px 12px;background:#ecfdf5;'
           + 'color:#065f46;border-radius:6px;font-size:13px;font-weight:600;';
         document.querySelector('.panel').appendChild(t);
+
+        // 行为契约观测点(路线 E):埋点。设计稿发两条 —— 点击 + 创建结果
+        console.log('track: task_create');
+        console.log('task_created id=T-1001');
       });
   </script>
 </body>
