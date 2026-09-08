@@ -14,8 +14,9 @@
 //   W3C accname 规范定义了浏览器如何为元素算出名字,即使被测方完全没做无障碍标注,
 //   浏览器也已经算好了名字 —— 对被测代码零侵入。
 
+import { argValue, hasFlag } from './lib/args.mjs';
 import {
-    argValue, hasFlag, withSession, fixViewport, addPreload,
+    withSession, fixViewport, addPreload,
     navigateAndWait, waitForSelector, waitRAF, measureElement,
     resolveBackendNode, norm, gridKey,
 } from './lib/cdp.mjs';
@@ -160,6 +161,19 @@ async function main() {
             items,
         };
     });
+
+    // ★ P0-1:空采集 = 执行错误,绝不等于「无差异」。
+    //   失效链:preload 静默失效 → 采到空快照 → diff 两侧都空 → 退出码 0 → 误报通过。
+    if (result.count === 0) {
+        console.error('ax-collect: 采集到 0 个语义节点 —— 这是执行错误(退出码 1),不是无差异');
+        console.error('  可能原因:preload 静默失效 / 页面未加载完成 / URL 指向空白页 / scope 选择器不匹配');
+        process.exit(1);
+    }
+    const minItems = Number(argValue(argv, '--min-items', '3'));
+    if (result.count < minItems) {
+        console.error(`ax-collect: 仅采集到 ${result.count} 个语义节点,低于 --min-items ${minItems} 阈值 —— 视为页面未稳定加载,执行错误(退出码 1)`);
+        process.exit(1);
+    }
 
     const json = JSON.stringify(result, null, 2);
     if (outPath) {

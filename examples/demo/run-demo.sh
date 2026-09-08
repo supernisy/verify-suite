@@ -71,5 +71,44 @@ node examples/demo/shot.mjs "$BASE/demo.html" docs/demo.png
 node examples/demo/shot.mjs "$BASE/prod.html" docs/prod.png
 node examples/demo/shot.mjs "$BASE/demo.html" docs/demo-clicked.png "[data-testid=btn-new]"
 node examples/demo/shot.mjs "$BASE/prod.html" docs/prod-clicked.png "[data-testid=btn-new]"
+# --- 6. 自检：空采集必须判执行错误(1)，绝不落为无差异(0) ------------------
+# 这是 P0-1 的验收用例：检测器必须先证明自己在工作。
+# 全绿但检测器其实没采集到任何东西，是最危险的假阳性。
+echo "########## 自检 · 空结果 = 执行错误(退出码 1) ##########"
+SELF_PASS=0; SELF_FAIL=0
+check_exit() {
+  local label="$1" want="$2" got="$3"
+  if [ "$got" = "$want" ]; then
+    echo "  PASS  $label  退出码=$got (期望 $want)"; SELF_PASS=$((SELF_PASS + 1))
+  else
+    echo "  FAIL  $label  退出码=$got (期望 $want)"; SELF_FAIL=$((SELF_FAIL + 1))
+  fi
+}
+
+# 6.1 采集器：指向空白页，必须判执行错误
+node scripts/ax-collect.mjs   --url "$BASE/blank.html" --side expected \
+  --out "$OUT/ax-blank.json" >/dev/null 2>&1
+check_exit "ax-collect   空白页" 1 "$?"
+node scripts/unit-collect.mjs --url "$BASE/blank.html" --side expected \
+  --out "$OUT/unit-blank.json" >/dev/null 2>&1
+check_exit "unit-collect 空白页" 1 "$?"
+node scripts/geo-collect.mjs --url "$BASE/blank.html" --probes examples/demo/probes.json \
+  --side expected --out "$OUT/geo-blank.json" >/dev/null 2>&1
+check_exit "geo-collect  空白页" 1 "$?"
+
+# 6.2 比对器：任一侧输入为空，必须判执行错误
+printf '{"side":"expected","items":[]}' > "$OUT/empty-a.json"
+printf '{"side":"actual","items":[]}'   > "$OUT/empty-b.json"
+printf '{"side":"expected","steps":[]}' > "$OUT/empty-tr.json"
+node scripts/ax-diff.mjs "$OUT/empty-a.json" "$OUT/empty-b.json" >/dev/null 2>&1
+check_exit "ax-diff      空输入" 1 "$?"
+node scripts/geo-compare.mjs "$OUT/empty-a.json" "$OUT/empty-b.json" \
+  examples/demo/probes.json >/dev/null 2>&1
+check_exit "geo-compare  空输入" 1 "$?"
+node scripts/trace-diff.mjs "$OUT/empty-tr.json" "$OUT/empty-tr.json" >/dev/null 2>&1
+check_exit "trace-diff   空输入" 1 "$?"
+
 echo
+echo "自检结果: $SELF_PASS 通过 / $SELF_FAIL 失败"
 echo "产物: docs/*.png  中间数据: $OUT/"
+[ "$SELF_FAIL" -eq 0 ] || { echo "!!! 自检未通过：检测器可能把空结果当成了无差异"; exit 1; }

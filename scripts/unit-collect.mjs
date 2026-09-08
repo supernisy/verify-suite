@@ -18,8 +18,9 @@
 //
 // ★ 强烈建议加 --scope:文本骨架覆盖面很大,整页扫会把业务数据全部归入"仅基准侧存在"。
 
+import { argValue, hasFlag } from './lib/args.mjs';
 import {
-    argValue, hasFlag, withSession, fixViewport, addPreload,
+    withSession, fixViewport, addPreload,
     navigateAndWait, waitForSelector, waitRAF, norm,
 } from './lib/cdp.mjs';
 
@@ -281,6 +282,18 @@ async function main() {
             stats: raw.stats,
         };
     });
+
+    // ★ P0-1:空采集 = 执行错误,绝不等于「无差异」。
+    if (result.count === 0) {
+        console.error('unit-collect: 采集到 0 个交互单元 / 文本骨架 —— 这是执行错误(退出码 1),不是无差异');
+        console.error('  可能原因:preload 静默失效 / 页面未加载完成 / URL 指向空白页 / scope 选择器不匹配');
+        process.exit(1);
+    }
+    const minItems = Number(argValue(argv, '--min-items', '3'));
+    if (result.count < minItems) {
+        console.error(`unit-collect: 仅采集到 ${result.count} 个单元,低于 --min-items ${minItems} 阈值 —— 视为页面未稳定加载,执行错误(退出码 1)`);
+        process.exit(1);
+    }
 
     const json = JSON.stringify(result, null, 2);
     if (outPath) {

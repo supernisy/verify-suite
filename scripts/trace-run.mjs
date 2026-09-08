@@ -15,8 +15,9 @@
 //   ② ★★ 判据是「两侧各自对照同一份语义断言」,不是「两侧的 diff 是否相同」
 //      (两侧数据量不同时,"比变化量是否一致"不是可判定命题 —— 实测 82 项噪声)
 
+import { argValue, hasFlag } from './lib/args.mjs';
 import {
-    argValue, hasFlag, withSession, fixViewport, addPreload,
+    withSession, fixViewport, addPreload,
     navigateAndWait, waitForSelector, waitForUrlContains, waitRAF, sleep,
     norm, gridKey,
 } from './lib/cdp.mjs';

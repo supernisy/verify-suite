@@ -19,8 +19,9 @@
 // ★★ 真正的风险不是判不准,是【探测完不复位会污染后续所有校验】
 //    → 检测到未复位必须打印告警:"跑其它校验前先 reload"
 
+import { argValue, hasFlag } from './lib/args.mjs';
 import {
-    argValue, hasFlag, withSession, fixViewport, addPreload,
+    withSession, fixViewport, addPreload,
     navigateAndWait, waitForSelector, waitRAF, checkVisibility, sleep,
 } from './lib/cdp.mjs';
 

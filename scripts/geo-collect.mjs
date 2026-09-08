@@ -11,8 +11,9 @@
 // ★ 硬约束(文档 §2):preload 注册、导航、采集必须在同一 session 内完成 ——
 //   所以本脚本不复用 cdp-client,自己串完三步。
 
+import { argValue, hasFlag } from './lib/args.mjs';
 import {
-    argValue, hasFlag, withSession, fixViewport, addPreload,
+    withSession, fixViewport, addPreload,
     navigateAndWait, waitForSelector, waitRAF, measureElement,
 } from './lib/cdp.mjs';
 
@@ -180,6 +181,23 @@ async function main() {
             items,
         };
     });
+
+    // ★ P0-1:空采集 = 执行错误,绝不等于「无差异」。
+    const collected = result.items.filter(i => !i.missing).length;
+    if (result.items.length === 0) {
+        console.error('geo-collect: 探针配置为空(probes 0 个)—— 执行错误(退出码 1),不是无差异');
+        process.exit(1);
+    }
+    if (collected === 0) {
+        console.error('geo-collect: 所有探针都未定位到元素(0 个采集成功)—— 这是执行错误(退出码 1),不是无差异');
+        console.error('  可能原因:页面未渲染 / 选择器双侧全失效 / preload 静默失效');
+        process.exit(1);
+    }
+    const minItems = Number(argValue(argv, '--min-items', '3'));
+    if (collected < minItems) {
+        console.error(`geo-collect: 仅 ${collected} 个探针采集成功,低于 --min-items ${minItems} 阈值 —— 视为页面未稳定加载,执行错误(退出码 1)`);
+        process.exit(1);
+    }
 
     const json = JSON.stringify(result, null, 2);
     if (outPath) {

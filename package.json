@@ -10,6 +10,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "check:layering": "node scripts/check-layering.mjs",
     "navigate": "node scripts/cdp-client.mjs navigate",
     "snapshot": "node scripts/cdp-client.mjs snapshot",
     "assert": "node scripts/cdp-client.mjs assert",

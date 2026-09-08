@@ -15,7 +15,7 @@
 //
 // 退出码: 0 无差异 | 1 执行错误 | 2 检出差异
 
-import { argValue, hasFlag } from './lib/cdp.mjs';
+import { argValue, hasFlag } from './lib/args.mjs';
 
 /**
  * ★ 容器类 role 只能比自身尺寸。
@@ -117,6 +117,16 @@ async function main() {
     const fs = await import('node:fs/promises');
     const exp = JSON.parse(await fs.readFile(expPath, 'utf8'));
     const act = JSON.parse(await fs.readFile(actPath, 'utf8'));
+
+    // ★ P0-1:任一侧输入快照为空或缺少必需字段 = 执行错误,绝不落到 0(无差异)或 2(检出差异)。
+    if (!exp || !Array.isArray(exp.items) || !act || !Array.isArray(act.items)) {
+        console.error('ax-diff: 输入快照缺少 items 字段 —— 执行错误(退出码 1),不是无差异');
+        process.exit(1);
+    }
+    if (exp.items.length === 0 || act.items.length === 0) {
+        console.error('ax-diff: 任一侧输入快照为空 —— 这是采集失败,不是无差异。执行错误(退出码 1)');
+        process.exit(1);
+    }
 
     const expItems = (exp.items ?? []).filter(i => includeNameless || i.normName);
     const actItems = (act.items ?? []).filter(i => includeNameless || i.normName);

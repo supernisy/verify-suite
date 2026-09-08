@@ -14,23 +14,12 @@ export const CDP_PORT = Number(process.env.VERIFY_CDP_PORT ?? '9222');
 export const CDP_BASE = `http://${CDP_HOST}:${CDP_PORT}`;
 
 // ---------------------------------------------------------------------------
-// argv 工具
+// argv 工具 —— 已迁出到 lib/args.mjs(判据层)
+//
+// P0-2 分层:本文件只保留真正的 CDP 通信与页面控制。参数解析与容差规则属于
+// 判定能力,是被保护的资产,必须能脱离驱动层独立运行。
+// 需要这两个函数请 `import { argValue, hasFlag } from './args.mjs'`。
 // ---------------------------------------------------------------------------
-
-/**
- * ★ 5.1:indexOf 未命中时 -1+1=0 会取到第一个位置参数,parseInt 得 NaN,
- *   Math.abs(d) <= NaN 永远 false → 全量误报。必须先判 i >= 0。
- */
-export function argValue(argv, name, fallback) {
-    const i = argv.indexOf(name);
-    if (i < 0) return fallback;
-    const v = argv[i + 1];
-    return v === undefined ? fallback : v;
-}
-
-export function hasFlag(argv, name) {
-    return argv.includes(name);
-}
 
 // ---------------------------------------------------------------------------
 // 会话
@@ -444,18 +433,8 @@ export function readJson(path) {
 }
 
 // ---------------------------------------------------------------------------
-// 容差策略(原则 7:连续量 ±1px,离散设计 token 零容差)
+// 容差策略 —— 已迁出到 lib/tolerance.mjs(判据层)
+//
+// P0-2 分层:容差规则是判定能力,不应依赖驱动层。
+// 需要请 `import { toleranceFor, STRICT_FIELDS } from './tolerance.mjs'`。
 // ---------------------------------------------------------------------------
-
-export const STRICT_FIELDS = new Set(['fontSize', 'fontWeight', 'radius', 'borderRadius', 'iconSize', 'lineHeight']);
-
-/**
- * 判断字段是否零容差。
- * @param {string} field
- * @param {string[]} strictList 探针里显式声明的 strict 字段
- */
-export function toleranceFor(field, strictList = [], defaultTol = 1) {
-    if (strictList.includes(field)) return 0;
-    if (STRICT_FIELDS.has(field)) return 0;
-    return defaultTol;
-}

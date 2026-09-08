@@ -13,8 +13,9 @@
 //   无文本无 aria 的交互单元数
 //   文本骨架可用率(实测参考:99.2% / 70.4%)
 
+import { argValue, hasFlag } from './lib/args.mjs';
 import {
-    argValue, hasFlag, withSession, fixViewport, addPreload,
+    withSession, fixViewport, addPreload,
     navigateAndWait, waitForSelector, waitRAF,
 } from './lib/cdp.mjs';
 

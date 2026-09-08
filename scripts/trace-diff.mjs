@@ -22,7 +22,7 @@
 //
 // 退出码: 0 全部两侧达成 | 1 执行错误 | 2 检出差异/断言未达成
 
-import { argValue, hasFlag } from './lib/cdp.mjs';
+import { argValue, hasFlag } from './lib/args.mjs';
 
 async function main() {
     const argv = process.argv.slice(2);
@@ -57,6 +57,12 @@ async function main() {
     const expSteps = exp.steps ?? [];
     const actSteps = act.steps ?? [];
     const n = Math.max(expSteps.length, actSteps.length);
+
+    // ★ P0-1:任一侧轨迹快照为空(0 步)= 采集失败,绝不等于「两侧都达成(0)」。
+    if (expSteps.length === 0 || actSteps.length === 0) {
+        console.error('trace-diff: 任一侧轨迹快照为空(0 步)—— 这是采集失败,不是无差异。执行错误(退出码 1)');
+        process.exit(1);
+    }
 
     let bothOk = 0, oneSideFail = 0, bothFail = 0;
     const lines = [];
