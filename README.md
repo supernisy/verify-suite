@@ -190,6 +190,21 @@ demo 故意注入的差异:`fontSize 20→18` / `padding 12→8` / 「技能」�
 
 > specgate 管「该验什么」,verify-suite 管「怎么验」。
 
+### 实际跑一遍(可复现)
+
+两个仓库独立。在 specgate 仓库下,直接对 verify-suite 的契约文件跑门禁即可:
+
+```bash
+cd /path/to/specgate
+node src/cli.js lint /path/to/verify-suite/acceptance/contract-bad.yaml   # 退出码 2:拦截 3 处恒真废话
+node src/cli.js lint /path/to/verify-suite/acceptance/contract.yaml       # 退出码 0:全部通过
+```
+
+![specgate 拦截坏契约](docs/specgate-fail-review.png)
+*坏契约被拦:3 条 invariants(A1/A5/A9)被判恒真废话,逐一给出修改建议。通过态见 [specgate 的 PASS 截图](https://github.com/supernisy/specgate/blob/main/docs/specgate-pass-review.png)。*
+
+> 这份契约就是 verify-suite 自己的验收门禁:落在 `acceptance/` 下,由 specgate `lint` 把门、`plan` 切出 `impl-task/` 与 `test-task/` 两个物理隔离任务包。
+
 ## 文档导航
 
 - [`SKILL.md`](./SKILL.md) · 每条命令的用法 + 场景选择 + 踩坑提示
