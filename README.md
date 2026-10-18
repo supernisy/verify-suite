@@ -235,6 +235,19 @@ node src/cli.js lint /path/to/verify-suite/acceptance/contract.yaml       # 退�
 设计灵魂两条不可妥协：**① 需求驱动（只做需求要的、只在盲区降级）；② 确定性 + 可溯源
 （AX 为主、LLM 只解释、每个字段带证据等级）**。
 
+### 一键使用：UI 测试工作流 Skill
+
+上述能力已封装成一个**可直接调用的 skill**：[`skills/ui-testing-workflow/SKILL.md`](./skills/ui-testing-workflow/SKILL.md)。
+它把「OpenSpec 建需求 → SpecGate 定契约 → 常规实现与测试 → 调用 verify-suite 执行测试用例」整条链路固化下来，
+让任意 AI 接手任意 UI（浏览器 / 原生 App）都能复现稳定的"理解 + 操作 + 验证"结果。
+
+**怎么用：**
+- **作为 WorkBuddy skill 调用**：在对话里直接说"用 ui-testing-workflow skill 给某个 UI 建一套测试"，或把它放进你的 skill 目录后由 Agent 自动匹配触发。
+- **作为流程手册**：人也可以照着 `SKILL.md` 的 5 步链路手动走——它内含"前置确认（工具可能没装）""目标未提供必须问人"等硬规则，避免踩坑。
+- **契约即交接物**：skill 吃的是 `spec.md` + `contract.yaml` 这两份文件（不是模糊 prompt），下游生成用例 / 执行测试的 AI 都按契约行事；示例契约 [`acceptance/ui-testing/contract.yaml`](./acceptance/ui-testing/contract.yaml) 已 `specgate lint` 过关（退出码 0）。
+
+**配套文档**（都在 `docs/ui-testing/`）：[`WORKFLOW.md`](./docs/ui-testing/WORKFLOW.md)（整体流程·人+AI）· [`QUICKSTART.md`](./docs/ui-testing/QUICKSTART.md)（极简上手）· [`methodology.md`](./docs/ui-testing/methodology.md)（方法论）· [`AGENT-HANDOFF.md`](./docs/ui-testing/AGENT-HANDOFF.md)（给开发 AI 的交接）。
+
 ## 文档导航
 
 - [`SKILL.md`](./SKILL.md) · 每条命令的用法 + 场景选择 + 踩坑提示
