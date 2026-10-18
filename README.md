@@ -217,6 +217,24 @@ node src/cli.js lint /path/to/verify-suite/acceptance/contract.yaml       # 退�
 - 克隆 [supernisy/specgate](https://github.com/supernisy/specgate) 后 `npm install`(依赖 `yaml`),再 `node src/cli.js lint <契约>`。
 - 本地想提前自检,命令与上方「实际跑一遍」完全一致。
 
+## 通用 UI 测试能力（general-ui-testing）
+
+除前端还原度外，verify-suite 还承载**通用 UI 测试**能力：把"可视化 → 序列化 → UI 交互"
+链路提炼成可迁移 skill，让任意 AI 套任意 UI（浏览器 / 原生 App / 移动端）都能复现稳定的
+"理解 + 操作 + 验证"结果。
+
+- **方法论 + 模板 + 陷阱清单**：[`docs/ui-testing/methodology.md`](./docs/ui-testing/methodology.md)
+  （含 OpenSpec spec / spec gate 契约 / 序列化 schema / 交互计划 四套可复制模板）。
+- **适配器**：浏览器主适配器 `adapters/web-cdp/`（生产实现 `scripts/ax-collect.mjs`）；
+  原生 App 扩展适配器 `adapters/ax-native/`。
+- **虚构示例**：[`examples/general-ui/`](./examples/general-ui)（AcmeHR Web，走 CDP/AX，不绑定任何真实产品）。
+- **契约**：[`acceptance/ui-testing/contract.yaml`](./acceptance/ui-testing/contract.yaml)
+  （场景无关能力定义，复用 `specgate-gate.yml` 门禁，已覆盖 `acceptance/**/*.yaml`）。
+- **OpenSpec spec**：[`openspec/specs/general-ui-testing/spec.md`](./openspec/specs/general-ui-testing/spec.md)。
+
+设计灵魂两条不可妥协：**① 需求驱动（只做需求要的、只在盲区降级）；② 确定性 + 可溯源
+（AX 为主、LLM 只解释、每个字段带证据等级）**。
+
 ## 文档导航
 
 - [`SKILL.md`](./SKILL.md) · 每条命令的用法 + 场景选择 + 踩坑提示

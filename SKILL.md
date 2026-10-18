@@ -229,6 +229,24 @@ demo 侧走 mock server 而非硬编码:① 硬编码演示不了 loading/空态
 `trace-run` 连续 3 步(`--no-progress-k` 可调)语义快照完全相同 → 判定卡住,退出码 1。
 继续跑完只会产出一串"未达成",把「执行卡住」伪装成「实现有差异」—— 这比报错更糟。
 
+## 通用 UI 测试能力（general-ui-testing）
+
+> 第二能力：**把"大模型可视化 → 序列化 → UI 交互"链路提炼成可迁移 skill**，让任意 AI 套
+> 任意 UI（浏览器 / 原生 App / 移动端）都能复现稳定的"理解 + 操作 + 验证"结果。
+> 与既有"前端还原度"共享判定层（契约 / 指纹 / 证据 / 完整性），新增驱动层适配器。
+
+详见 [`docs/ui-testing/methodology.md`](./docs/ui-testing/methodology.md)。核心要点：
+
+- **感知以 AX 树为主、截图补位**：浏览器走 CDP/AX（`scripts/ax-collect.mjs` +
+  `adapters/web-cdp/`，**主适配器**）；原生 App 走 `adapters/ax-native/`（**扩展适配器**）。
+- **枚举/富化分离**：枚举遍只读 AX（快且全）；富化遍仅 AX 盲区字段截图，记 `degradation`，不静默降级。
+- **超集采集门**：语义 role 命中 OR 名称含日期时间即收录；被过滤节点进账本。
+- **完整性断言**：去重 + 已知总数比对；空/缺 = 执行错误，不是"完成"。
+- **需求驱动 + 可溯源**：每个字段带来源与置信度（`ax-tree=high` / `screenshot=medium`）。
+- **交互三类**：observe（抽取+断言）/ drive（可逆可观测操作）/ multi-step（编排），人审边界（登录/支付/删除/发消息）一律停下问。
+- **契约先行**：OpenSpec 锁需求（`openspec/specs/general-ui-testing/spec.md`）→ spec gate 定"什么算对"（`acceptance/ui-testing/contract.yaml`）→ 跑门禁（复用 `specgate-gate.yml`，已覆盖 `acceptance/**/*.yaml`）。
+- **虚构示例**：`examples/general-ui/`（AcmeHR Web，走 CDP/AX，不绑定微信）。
+
 ## 退出码
 
 | 码 | 含义 |

@@ -1,0 +1,56 @@
+{
+  "generatedAt": "2026-10-18T23:18:00",
+  "target": "https://acme.example.com/hr/inbox",
+  "adapter": "web-cdp",
+  "windows": {
+    "W0": {
+      "title": "AcmeHR · 候选人沟通记录",
+      "rect": { "left": 0, "top": 0, "right": 1440, "bottom": 900 },
+      "count": 3,
+      "messages": [
+        {
+          "sig": "row|和三哥 · 2026-10-18 21:39",
+          "role": "row",
+          "name": "和三哥 · 2026-10-18 21:39",
+          "body": "和三哥：方便看下岗位介绍吗？这边是 AcmeHR 招聘负责人。",
+          "time": "2026-10-18 21:39",
+          "rect": { "left": 0, "top": 120, "right": 720, "bottom": 164 },
+          "dtKey": [2026, 10, 18, 21, 39],
+          "contentType": "text",
+          "source": "ax-tree",
+          "confidence": "high"
+        },
+        {
+          "sig": "row|peì_í · 2026-10-18 21:42",
+          "role": "row",
+          "name": "peì_í · 2026-10-18 21:42",
+          "body": "peì_í：可以的，麻烦发我 JD 和薪酬范围。",
+          "time": "2026-10-18 21:42",
+          "rect": { "left": 0, "top": 168, "right": 720, "bottom": 212 },
+          "dtKey": [2026, 10, 18, 21, 42],
+          "contentType": "text",
+          "source": "ax-tree",
+          "confidence": "high"
+        },
+        {
+          "sig": "row|和三哥 · 2026-10-18 21:45",
+          "role": "row",
+          "name": "和三哥 · 2026-10-18 21:45",
+          "body": "和三哥：已发面试邀请，请查收邮件确认时间。",
+          "time": "2026-10-18 21:45",
+          "rect": { "left": 0, "top": 216, "right": 720, "bottom": 260 },
+          "dtKey": [2026, 10, 18, 21, 45],
+          "contentType": "text",
+          "source": "ax-tree",
+          "confidence": "high"
+        }
+      ]
+    }
+  },
+  "frames": [],
+  "degradation": {
+    "blindFieldsInAX": true,
+    "reason": "本示例需求不触及头像/纯视觉字段，无截图补位。",
+    "filteredRoles": []
+  }
+}

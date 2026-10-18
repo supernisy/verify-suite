@@ -1,0 +1,86 @@
+contract: general-ui-testing
+intent: |
+  通用 UI 测试能力的验收契约：把"序列化 → 抽取 → 驱动 → 验证"链路定义成可判定的
+  given/when/then，输出可复核的证据报告。
+
+  - 感知以 AX 树为主、截图补位：AX 拿不到的字段才截图，并标注 confidence=medium。
+  - 序列化只序列化需求字段；需求说"只取文字"就不截图。
+  - 枚举/富化分离：枚举遍只读 AX（快且全）；富化遍仅 AX 盲区字段截图。
+  - 采集门为超集：语义 role 命中 OR 名称含日期时间即收录；被过滤节点进账本，不静默丢行。
+  - 完整性断言：去重 + 已知总数比对；空/缺 = 执行错误，不是"完成"。
+  - 驱动操作只自动化可逆且可观测的中间段；人审边界（登录/支付/删除/发消息）一律停下问。
+  - 每个字段带来源与置信度（ax-tree=high / screenshot=medium），可被第三方复核。
+  - fail-loudly：N 次内不满足就响亮失败，不静默当成功。
+
+accept:
+  - id: U1
+    given: 一个 Web 页面含 N 条候选消息，AX 树可达
+    when: 执行 web-cdp 适配器枚举遍（Accessibility.getFullAXTree + 语义 role 过滤）
+    then: 输出恰好 N 条去重消息，每条含 body/time/source/confidence，来源 ax-tree、置信 high
+    verify: ax
+    suspect: false
+    invariants:
+      - 页面数据量翻倍时，去重后的消息条数按比例不变，且不产生重复 sig
+
+  - id: U2
+    given: 某字段（如头像）不在 AX 树暴露，且需求要求该字段
+    when: 执行富化遍截图补位
+    then: 该字段标注 confidence=medium 并写入 degradation 账本，不静默丢弃
+    verify: ax
+    suspect: false
+
+  - id: U3
+    given: AX 树中存在非目标类名 / 非日期命名的节点
+    when: 序列化执行采集门
+    then: 凡语义 role 命中或名称含日期时间者一律收录；其余节点类名记入账本
+    verify: ax
+    suspect: false
+    invariants:
+      - 新增一类语义 role 命中但类名不在旧白名单的节点时，收录集合的大小增加 1，且该节点出现在收录集合中
+
+  - id: U4
+    given: 序列化产物含 N 条消息，已知目标总数 = N
+    when: 抽取完成并做完整性断言
+    then: 去重计数 = N、无缺失、时间跨度符合预期；否则报执行错误
+    verify: unit
+    suspect: false
+    invariants:
+      - 当目标总数 N 翻倍时，去重计数同步翻倍，且缺失数保持为 0
+
+  - id: U5
+    given: 需求为"标记已发面试邀请的会话"（可逆、可观测中间动作）
+    when: 系统对命中行打标签
+    then: 该动作未触人审边界，允许自动执行，且动作后重序列化可验证标签已写入
+    verify: unit
+    suspect: false
+    invariants:
+      - 对某一行打标签后，其他行的字段集合保持不变
+
+  - id: U6
+    given: 需求要求"发送消息 / 删除 / 支付"
+    when: 系统识别到该动作属于人审边界
+    then: 暂停并交人工确认，不自动执行
+    verify: unit
+    suspect: false
+
+  - id: U7
+    given: 一次 UI 任务执行后，期望结果未达成
+    when: 验证步骤判定不满足
+    then: 响亮失败（fail-loudly），不静默当成功；重试上限内仍未达成即上报
+    verify: unit
+    suspect: false
+
+out_of_scope:
+  - 前端视觉还原度像素比对（既有路线 A 职责）
+  - 纯视觉 / 画布内容的语义理解（仅 AX 盲区补位，标 uncertain）
+  - 业务逻辑单元测试
+  - 移动端专项无障碍桥实现（同 AX 家族，待扩展）
+
+uses:
+  components: []
+  api: []
+  tokens: []
+
+breaks: []
+
+states: []
