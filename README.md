@@ -28,10 +28,10 @@ verify-suite 目前承载**两条能力**：
 
 | Skill | 路径 | 作用 | 触发场景 |
 |---|---|---|---|
-| **`ui-testing-workflow`**（本次新增） | [`skills/ui-testing-workflow/SKILL.md`](./skills/ui-testing-workflow/SKILL.md) | 把「OpenSpec 建需求 → SpecGate 定契约 → 常规实现与测试 → 调用 verify-suite 执行」整条链路固化成 5 步 | "给某个 UI（浏览器 / 原生 App）建一套测试 / 抽取 / 驱动流程"；或提到 OpenSpec / SpecGate / 验收契约 / UI 自动化测试 |
+| **`ui-testing-workflow`**（本次新增） | [`skills/ui-testing-workflow/SKILL.md`](./skills/ui-testing-workflow/SKILL.md) | 把「OpenSpec 建需求 → SpecGate 定契约 → 常规实现与测试 → 调用 verify-suite 执行」整条链路固化成 5 步；**也支持轻量模式**——用户直接给测试用例、无需 OpenSpec/SpecGate，AI 直接调 verify-suite 执行引擎 | "给某个 UI（浏览器 / 原生 App）建一套测试 / 抽取 / 驱动流程"；或提到 OpenSpec / SpecGate / 验收契约 / UI 自动化测试；或"我直接给你测试用例你帮我跑" |
 | 前端还原度（原有） | [`SKILL.md`](./SKILL.md) | 路线 A/B/C/E 的命令索引、场景选择与踩坑提示 | "页面 vs 设计稿 差异比对""交互 / 行为还原度" |
 
-> `ui-testing-workflow` 的元信息（YAML 头部）：`name: ui-testing-workflow` · `version: 0.1.0` · `type: tool` · `description` 写明"什么诉求下触发"。
+> `ui-testing-workflow` 的元信息（YAML 头部）：`name: ui-testing-workflow` · `version: 0.1.1` · `type: tool` · `description` 写明"什么诉求下触发（含轻量模式）"。
 
 ## Skill 怎么配置
 
@@ -66,6 +66,16 @@ verify-suite 目前承载**两条能力**：
 AI 会**自动走完**：OpenSpec 锁需求 → SpecGate 定契约（含 lint）→ 常规实现与测试 → 调用 verify-suite 执行 → 出**带证据等级**的验证报告。
 
 > 不想用 Skill 也行：照 [`WORKFLOW.md`](./docs/ui-testing/WORKFLOW.md) 手动走同样链路。
+
+### 没装 OpenSpec / SpecGate？直接把测试用例丢给 AI（轻量模式）
+
+完整链路（OpenSpec→SpecGate）是"正规范式"，**不是必须的**。如果你本机没装这两个工具、也不想学 `contract.yaml` 格式，走**轻量模式**即可：
+
+- 你只需给两样：**① 一个可被访问的目标**（URL / 窗口 / 进程，这条不能省，没给 AI 会停下问你）；**② 测试用例本身**（自然语言列表 / 表格 / 截图描述都行）。
+- AI 会自己读用例 → 归一化成执行计划 → **直接调 verify-suite 执行引擎跑**（序列化→observe/drive→出带证据等级的报告），全程**不依赖 OpenSpec / SpecGate、不需要你写任何契约**。
+- 两种模式在执行层完全一致（同样的 AX 树为主、超集采集门、完整性断言、安全边界）；区别只在"用例从哪来"。想升级成可 CI 卡门禁的正式契约时，再把这轮用例反过来生成 `contract.yaml` 即可。
+
+详见给人文档 [`docs/ui-testing/QUICKSTART.md` §4](./docs/ui-testing/QUICKSTART.md)、给 AI 文档 [`docs/ui-testing/AGENT-HANDOFF.md` §13](./docs/ui-testing/AGENT-HANDOFF.md)。
 
 ### 给 AI / 开发者（触发后照 5 步）
 1. **OpenSpec 建需求** → 2. **SpecGate 定契约 + `lint` 过关** → 3. **常规实现与测试** → 4. **调用 verify-suite 执行**（读契约 → 选适配器 → 确认目标 → 序列化 → `observe` / `drive` / `multi-step` → 出报告）→ 5. **输出带证据等级的报告**。

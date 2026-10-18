@@ -246,7 +246,7 @@ SpecGate CLI 根目录：`<specgate>`（**路径不固定**，需按你的环境
 
 ## 12. 本模块的 Skill：`ui-testing-workflow`（给 AI 的安装与使用）
 
-整条链路已封装成可复用 Skill：[`skills/ui-testing-workflow/SKILL.md`](../../skills/ui-testing-workflow/SKILL.md)（YAML 头部 `name: ui-testing-workflow` / `version: 0.1.0` / `type: tool`）。它把 "OpenSpec 建需求 → SpecGate 定契约 → 常规实现与测试 → 调用 verify-suite 执行" 固化成 5 步链路，并写死两条硬规则（来自人类纠正，不可妥协）：
+整条链路已封装成可复用 Skill：[`skills/ui-testing-workflow/SKILL.md`](../../skills/ui-testing-workflow/SKILL.md)（YAML 头部 `name: ui-testing-workflow` / `version: 0.1.1` / `type: tool`）。它支持**两条入口**：入口 A「OpenSpec 建需求 → SpecGate 定契约 → 常规实现与测试 → 调用 verify-suite 执行」完整链路，以及**入口 B 轻量模式**（用户直接给测试用例、无需 OpenSpec/SpecGate）。两条入口在执行层共用同一套 verify-suite 执行引擎，并写死两条硬规则（来自人类纠正，不可妥协）：
 
 1. **Step 0 前置确认**：不假设 OpenSpec / SpecGate 已安装；缺失则先引导安装（获取方式见 §0.5），不要直接当已装去跑命令。
 2. **Step 4 目标缺失必须问人**：执行时若用户未提供目标（URL / 窗口 / 进程），必须停下向用户澄清，**绝不能用占位或猜测的目标继续**。
@@ -266,11 +266,50 @@ SpecGate CLI 根目录：`<specgate>`（**路径不固定**，需按你的环境
 
 ### 12.2 怎么用
 
-触发后，严格照 `SKILL.md` 的 5 步链路执行：**① OpenSpec 建需求 → ② SpecGate 定契约并 `lint` 过关 → ③ 常规实现与测试 → ④ 调用 verify-suite 执行（契约即交接物，吃 `spec.md` + `contract.yaml`）→ ⑤ 出带证据等级的验证报告**。
+触发后，先走 **Step 0 前置确认** 判定走哪条入口，再执行：
 
-- 衔接点：Phase ④ 执行引擎就是本仓库——读 `acceptance/<cap>/contract.yaml` → 选适配器（`web-cdp` / `ax-native`）→ 序列化（枚举遍只读 AX、富化遍只补盲区）→ observe / drive → 对照契约出报告。
-- 示例契约 [`acceptance/ui-testing/contract.yaml`](../../acceptance/ui-testing/contract.yaml) 已 `specgate lint` 过关（退出码 0），可作为模板。
+- **入口 A · 完整链路**：**① OpenSpec 建需求 → ② SpecGate 定契约并 `lint` 过关 → ③ 常规实现与测试 → ④ 调用 verify-suite 执行（契约即交接物，吃 `spec.md` + `contract.yaml`）→ ⑤ 出带证据等级的验证报告**。
+- **入口 B · 轻量模式**：用户直接给测试用例（自然语言 / 表格 / 截图描述），**不需要 OpenSpec / SpecGate、不需要 `contract.yaml`** → AI 归一化为执行计划 → 直接调同一套 verify-suite 执行引擎 → 出报告。详见 §13。
 
-### 12.3 仓库维护者注意（待办）
+衔接点（两入口共用）：Phase ④ 执行引擎就是本仓库——读 `acceptance/<cap>/contract.yaml`（入口 A）或归一化 `执行计划`/`cases.md`（入口 B）→ 选适配器（`web-cdp` / `ax-native`）→ 序列化（枚举遍只读 AX、富化遍只补盲区）→ observe / drive → 对照输入出报告。
+示例契约 [`acceptance/ui-testing/contract.yaml`](../../acceptance/ui-testing/contract.yaml) 已 `specgate lint` 过关（退出码 0），可作为模板。
 
-`.github/workflows/specgate-gate.yml` 的 glob 扩展（`acceptance/*.yaml` → 增加 `acceptance/**/*.yaml`，让子目录契约也被门禁覆盖）**尚未推送**：当前推送用的 token 缺 `workflow` OAuth scope，GitHub 拒绝改动 workflow 文件。该改动已存为补丁 `wf.patch`，待有 `workflow` scope 的 token 时 `git apply` 后推送即可。
+### 12.3 仓库维护者注意（已完成）
+
+`.github/workflows/specgate-gate.yml` 的 glob 扩展（`acceptance/*.yaml` → 增加 `acceptance/**/*.yaml`，让子目录契约也被门禁覆盖）**已推送**（commit `7acedc0`，main）。CI 门禁现覆盖 `acceptance/*.yaml` 与 `acceptance/**/*.yaml`，PR 时自动 `specgate lint`，跳过 `*-bad.yaml` 与 `*.draft.yaml`。
+
+---
+
+## 13. 轻量模式：用户直接给测试用例（无 OpenSpec / SpecGate）
+
+当用户**没有 / 不想装** OpenSpec、SpecGate，直接把测试用例丢过来时，走此模式。**这是 Skill 的入口 B，执行层与入口 A 完全一致，只是"用例来源"不同。**
+
+### 13.1 怎么识别该走入口 B
+
+触发信号：用户说"帮我跑一下这个测试""按下面这几点测""我没装那些工具，直接给你用例"。**Step 0 前置确认**里就要问清走 A 还是 B；用户没明说但给了现成用例、且没提 OpenSpec/SpecGate，默认按 B 走并跟用户确认一句。
+
+### 13.2 收用例（任意形式都接受）
+
+用户给的形式不限：自然语言列表、Markdown 表格、甚至"截图里画的测试点"。AI 必须从中解析出三要素：
+
+1. **被测目标**（URL / 窗口 / 进程）—— ⚠️ 最常缺失，缺失必须停下问人（硬规则，与入口 A 同）。
+2. **每条用例的操作（given / when）**。
+3. **每条用例的期望（then）**。
+
+示例用户话术：
+> "帮我测 AcmeHR 候选人沟通页（https://acmehr.example.com/messages）：① 打开看标题是不是'候选人沟通'；② 点开第一条会话，抽 发件人/时间/正文；③ 给'已发面试邀请'的会话打标签，再验证标签在不在。"
+
+### 13.3 归一化（AI 内部步骤，用户无需参与）
+
+- 把用例整理成内部**执行计划**，每条一个 `given / when / then`。建议顺手落一份 `cases.md` 到工作区以便追溯——**非必须**，且**不需要 contract.yaml 格式、不需要 lint**。
+- 若用例自带"目标 + 期望" → 直接进执行。
+- 若只有模糊意图（如"测一下登录"）→ **先按硬规则跟用户确认目标与期望**，绝不让模糊意图硬跑。
+
+### 13.4 执行（复用入口 A 的执行引擎）
+
+拿到 `执行计划 + 目标 + 适配器选择` 后，走 §4 的全部接口契约与纪律：盘点 → 选型 → 序列化（枚举/富化两遍分离、超集采集门、完整性断言）→ observe / drive / multi-step → 出**带证据等级**的报告。
+
+### 13.5 出报告 & 升级
+
+- 对照归一化的 `执行计划` / `cases.md` 逐条给 pass/fail + 证据（每条带 `source` + `confidence`）。
+- 若用户后续想要"可机器复跑 / CI 卡门禁"的正式契约：用 `specgate bridge <cases.md> <契约.yaml>` 把执行计划反过来生成 `contract.yaml` 草稿 → `lint` 补 invariants → 升级到入口 A（此时才需要装 SpecGate）。
