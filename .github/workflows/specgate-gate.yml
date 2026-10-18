@@ -43,7 +43,7 @@ jobs:
           set -euo pipefail
           FAIL=0
           shopt -s nullglob
-          for f in repo/acceptance/*.yaml; do
+          for f in repo/acceptance/*.yaml repo/acceptance/**/*.yaml; do
             base=$(basename "$f")
             # 跳过：故意写坏的演示样本（-bad）、未定稿草稿（.draft）
             case "$base" in
