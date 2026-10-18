@@ -48,6 +48,7 @@
 **改动既有文件（仅增量，不动旧逻辑）：**
 
 - `.github/workflows/specgate-gate.yml`：门禁 glob 由 `acceptance/*.yaml` 扩为 `acceptance/*.yaml` + `acceptance/**/*.yaml`，让子目录契约也被门禁覆盖。
+- `skills/ui-testing-workflow/SKILL.md`：把整条链路封装成的可复用 skill（README 已链接到它）。
 - `SKILL.md` / `README.md`：各加一节「通用 UI 测试能力」指向上面模块，**既有前端还原度说明一字未改**。
 
 > ✅ 既有"前端还原度判定"链路（Web/CDP、语义指纹、specgate 门禁、AGENTS.md 规范）全部复用，本模块只是在它的分层架构上挂载了新的驱动层适配器与判定层契约。
@@ -86,7 +87,24 @@ python adapters/web-cdp/ax-collect.py --demo
 
 ---
 
-## 4. 想深入，从哪进？
+## 4. 想省事？用 Skill 让 AI 一键走完这条链路（给人类）
+
+如果你不想自己照 `WORKFLOW.md` 一步步手动跑，我们已把整条链路**封装成一个 Skill**：[`skills/ui-testing-workflow/SKILL.md`](./skills/ui-testing-workflow/SKILL.md)。
+
+**你（人类）只需要做两件事：**
+1. 想清楚**要测哪个 UI**（浏览器页面 / 原生 App）、以及**大致想验证什么**（抽取什么信息、做哪些可逆操作）。
+2. 把目标交给 AI：给它一个**可被自动化访问的目标**（URL / 窗口 / 进程）。**如果目标没给，AI 会停下问你，不会自己瞎猜**——这是 Skill 的硬规则。
+
+**然后你只要说一句话**，例如：
+> "用 ui-testing-workflow skill，给 AcmeHR 的候选人沟通页建一套测试：抽出发件人/时间/正文，并给'已发面试邀请'的会话打标签。"
+
+AI 就会自动走完：**OpenSpec 锁需求 → SpecGate 定契约（含 lint）→ 常规实现与测试 → 调用 verify-suite 执行并出带证据等级的报告**，并且内置"工具可能没装先确认""目标缺失必问人"等防坑规则。
+
+> 💡 这个 Skill 不是必须用的：你完全可以照 `WORKFLOW.md` 手动走。Skill 只是把那条链路固化下来，让任意 AI 接手都能复现同样的结果。
+
+---
+
+## 5. 想深入，从哪进？
 
 | 你的角色           | 看哪个                                                                    |
 | -------------- | ---------------------------------------------------------------------- |

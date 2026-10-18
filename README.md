@@ -246,6 +246,15 @@ node src/cli.js lint /path/to/verify-suite/acceptance/contract.yaml       # 退�
 - **作为流程手册**：人也可以照着 `SKILL.md` 的 5 步链路手动走——它内含"前置确认（工具可能没装）""目标未提供必须问人"等硬规则，避免踩坑。
 - **契约即交接物**：skill 吃的是 `spec.md` + `contract.yaml` 这两份文件（不是模糊 prompt），下游生成用例 / 执行测试的 AI 都按契约行事；示例契约 [`acceptance/ui-testing/contract.yaml`](./acceptance/ui-testing/contract.yaml) 已 `specgate lint` 过关（退出码 0）。
 
+**怎么装到自己的环境：**
+- 把本仓库 `skills/ui-testing-workflow/` 整个目录拷到你的 skill 目录（用户级 `~/.workbuddy/skills/` 或项目级 `<项目>/.workbuddy/skills/`），重启 WorkBuddy 后，即可在对话里用「用 ui-testing-workflow skill …」触发，或等 Agent 按 `description` 自动匹配。
+- 目录里只需 `SKILL.md`（YAML 头部的 `name` / `description` / `version` / `type` 为必填）；`description` 写得越具体，自动触发越准。
+
+**怎么照着写一个自己的 Skill：**
+- 复用同款 front-matter 骨架，并在 `description` 写清"什么诉求下触发"。
+- 链路写成「前置确认 → 分阶段执行 → 硬规则」三段式：`Step 0` 永远先确认外部工具是否已装、用户目标是否已给，**不要假设**。
+- 把"契约即交接物"写死：吃结构化的 `spec.md` + `contract.yaml`，而不是一段模糊 prompt。
+
 **配套文档**（都在 `docs/ui-testing/`）：[`WORKFLOW.md`](./docs/ui-testing/WORKFLOW.md)（整体流程·人+AI）· [`QUICKSTART.md`](./docs/ui-testing/QUICKSTART.md)（极简上手）· [`methodology.md`](./docs/ui-testing/methodology.md)（方法论）· [`AGENT-HANDOFF.md`](./docs/ui-testing/AGENT-HANDOFF.md)（给开发 AI 的交接）。
 
 ## 文档导航

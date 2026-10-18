@@ -67,7 +67,8 @@ verify-suite/
 │   └── requirement.md          # 需求侧说明（与 spec.md 互补）
 ├── scripts/ax-collect.mjs      # 既有生产级 Web/CDP 适配器（本模块主适配器的生产实现）
 ├── .github/workflows/specgate-gate.yml  # 门禁（glob 已扩到 acceptance/**/*.yaml）
-├── SKILL.md / README.md        # 各加一节「通用 UI 测试能力」
+├── skills/ui-testing-workflow/SKILL.md  # 本模块封装成的可复用 skill（OpenSpec→SpecGate→verify-suite 一键链路）
+├── SKILL.md / README.md        # 各加一节「通用 UI 测试能力」+ README 链接到 skill
 └── (既有) acceptance/contract.yaml, scripts/lib/cdp.mjs 等保持不变
 ```
 
@@ -240,3 +241,36 @@ SpecGate CLI 根目录：`<specgate>`（**路径不固定**，需按你的环境
 - ❌ 用户口述的 "OpenSPG / SPG Gateway" 是**语音输入转文字的误识别**，实际是 "OpenSpec / SpecGate"。**不要**据此去构建任何 "OpenSPG 语音转化上游系统"。
 - ✅ 正确链路就是 OpenSpec（需求）→ SpecGate（契约）→ AI 生成用例 → 执行。
 - 本项目早期有过"把同一份微信聊天记录重做多遍、最后因加图像扫描超时"的教训：永远先盘点、需求锁死就别范围蔓延、枚举与富化分离。
+
+---
+
+## 12. 本模块的 Skill：`ui-testing-workflow`（给 AI 的安装与使用）
+
+整条链路已封装成可复用 Skill：[`skills/ui-testing-workflow/SKILL.md`](../../skills/ui-testing-workflow/SKILL.md)（YAML 头部 `name: ui-testing-workflow` / `version: 0.1.0` / `type: tool`）。它把 "OpenSpec 建需求 → SpecGate 定契约 → 常规实现与测试 → 调用 verify-suite 执行" 固化成 5 步链路，并写死两条硬规则（来自人类纠正，不可妥协）：
+
+1. **Step 0 前置确认**：不假设 OpenSpec / SpecGate 已安装；缺失则先引导安装（获取方式见 §0.5），不要直接当已装去跑命令。
+2. **Step 4 目标缺失必须问人**：执行时若用户未提供目标（URL / 窗口 / 进程），必须停下向用户澄清，**绝不能用占位或猜测的目标继续**。
+
+### 12.1 怎么装到你的环境
+
+把 `skills/ui-testing-workflow/` 整个目录复制到你的 skill 目录，二选一：
+
+- **用户级**（跨项目）：`~/.workbuddy/skills/ui-testing-workflow/`
+- **项目级**（随仓库走）：`<你的项目>/.workbuddy/skills/ui-testing-workflow/`
+
+复制后重启 WorkBuddy（或刷新 skill 列表），即可通过以下方式触发：
+- 显式说："用 ui-testing-workflow skill 给某 UI 建一套测试"；
+- 或让 Agent 按 `description` 自动匹配（描述写得越具体，触发越准）。
+
+> 目录里只需 `SKILL.md` 一个文件即可生效；`description` 是自动匹配的唯一依据，务必写实。
+
+### 12.2 怎么用
+
+触发后，严格照 `SKILL.md` 的 5 步链路执行：**① OpenSpec 建需求 → ② SpecGate 定契约并 `lint` 过关 → ③ 常规实现与测试 → ④ 调用 verify-suite 执行（契约即交接物，吃 `spec.md` + `contract.yaml`）→ ⑤ 出带证据等级的验证报告**。
+
+- 衔接点：Phase ④ 执行引擎就是本仓库——读 `acceptance/<cap>/contract.yaml` → 选适配器（`web-cdp` / `ax-native`）→ 序列化（枚举遍只读 AX、富化遍只补盲区）→ observe / drive → 对照契约出报告。
+- 示例契约 [`acceptance/ui-testing/contract.yaml`](../../acceptance/ui-testing/contract.yaml) 已 `specgate lint` 过关（退出码 0），可作为模板。
+
+### 12.3 仓库维护者注意（待办）
+
+`.github/workflows/specgate-gate.yml` 的 glob 扩展（`acceptance/*.yaml` → 增加 `acceptance/**/*.yaml`，让子目录契约也被门禁覆盖）**尚未推送**：当前推送用的 token 缺 `workflow` OAuth scope，GitHub 拒绝改动 workflow 文件。该改动已存为补丁 `wf.patch`，待有 `workflow` scope 的 token 时 `git apply` 后推送即可。
