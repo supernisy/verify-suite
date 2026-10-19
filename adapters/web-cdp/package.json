@@ -1,0 +1,13 @@
+{
+  "name": "verify-suite-web-cdp-playwright",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright 驱动层（验证引擎）：替代 web-cdp 适配器的裸 CDP，提供 auto-wait / strict 语义定位 / web-first 可重试断言 / Trace 证据。AX 树仍为感知主源。",
+  "scripts": {
+    "install:browser": "playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}

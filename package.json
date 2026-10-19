@@ -1,7 +1,7 @@
 {
   "name": "verify-suite",
   "version": "0.1.0",
-  "description": "CDP-based frontend fidelity verification toolkit (visual + interaction). Zero npm dependencies, Node 22+ native WebSocket/fetch.",
+  "description": "CDP-based frontend fidelity verification toolkit (visual + interaction). Node 22+ native WebSocket/fetch for the CDP path; optional Playwright engine under adapters/web-cdp.",
   "type": "module",
   "bin": {
     "verify-suite": "./scripts/cdp-client.mjs"
@@ -16,6 +16,9 @@
     "assert": "node scripts/cdp-client.mjs assert",
     "screenshot": "node scripts/cdp-client.mjs screenshot"
   },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  },
   "keywords": [
     "cdp",
     "chrome-devtools-protocol",
@@ -25,5 +28,8 @@
     "frontend-testing"
   ],
   "author": "supernisy <supernisy@users.noreply.github.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "playwright": "^1.64.1"
+  }
 }

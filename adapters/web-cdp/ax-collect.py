@@ -189,6 +189,50 @@ def demo():
                             [], deg)
 
 
+# ---------------------------------------------------------------------------
+# Playwright 变体（与 playwright-driver.mjs 同构，零侵入替换 CDP）
+# 仅骨架：演示 API 等价映射；生产实现见 adapters/web-cdp/playwright-driver.mjs。
+# 需要: pip install playwright && playwright install chromium
+# ---------------------------------------------------------------------------
+class PlaywrightDriver:
+    """语义定位 + strict / auto-wait 交互 / web-first 可重试断言 / trace。
+
+    等价于 JS 引擎:
+      get_ax_tree -> page.accessibility.snapshot()
+      locate      -> page.get_by_role(role, name=...)  (strict 默认开)
+      click/fill  -> locator.click()/fill()  (自带 actionability 等待)
+      assert_*    -> expect(locator).to_be_visible()  (@playwright/test)
+      trace       -> context.tracing.start/stop()
+      measure     -> locator.bounding_box() + evaluate(getComputedStyle)
+    """
+
+    def __init__(self, headless: bool = True, viewport: tuple = (1440, 900)):
+        self.headless = headless
+        self.viewport = viewport
+        self._browser = None
+
+    def launch(self):
+        # TODO(目标特定): 接入 Playwright
+        #   from playwright.sync_api import sync_playwright
+        #   self._pw = sync_playwright().start()
+        #   self._browser = self._pw.chromium.launch(headless=self.headless)
+        #   ctx = self._browser.new_context(viewport={"width": self.viewport[0], "height": self.viewport[1]})
+        #   self.page = ctx.new_page()
+        raise NotImplementedError("目标特定逻辑未实现：接入 Playwright（见 adapters/web-cdp/playwright-driver.mjs）。")
+
+    def get_ax_tree(self):
+        # TODO: return self.page.accessibility.snapshot()
+        raise NotImplementedError
+
+    def locate(self, role: str, name: str | None = None):
+        # TODO: return self.page.get_by_role(role, name=name)
+        raise NotImplementedError
+
+    def measure(self, locator):
+        # TODO: return locator.bounding_box() 与 evaluate 取计算样式
+        raise NotImplementedError
+
+
 def main():
     ap = argparse.ArgumentParser(description="通用 Web/AX 采集轻量骨架 (web-cdp)")
     ap.add_argument("--demo", action="store_true", help="打印 schema 示例后退出")

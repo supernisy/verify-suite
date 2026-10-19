@@ -1,0 +1,99 @@
+contract: playwright-web-driver
+intent: |
+  将 web-cdp 适配器底层浏览器自动化引擎从裸 CDP 替换为 Playwright 的验收契约。
+  引擎负责 locate / drive / assert / trace；AX 树仍为感知主源。
+
+  - 引擎：auto-wait 消除手艺式 sleep；strict mode 多命中即报错不盲选。
+  - 语义定位基于 AX 树（等价 getByRole / getByLabel）。
+  - web-first 可重试断言，失败信息含定位器 / 实际 / 期望。
+  - Trace 可回放，作为 fail-loudly 后的取证载体。
+  - 感知仍以 AX 树为主，截图仅补 AX 盲区。
+  - 入口 A（契约驱动）与入口 B（轻量用例）共用同一引擎。
+  - ax-native 适配器行为不变。
+
+accept:
+  - id: P1
+    given: 一个元素异步渲染（回车后 300ms 才出现）
+    when: 执行 observe / drive（Playwright 引擎）
+    then: 引擎自动等待元素可操作后再交互，不依赖手写 sleep；结果稳定可复现
+    verify: unit
+    suspect: false
+    invariants:
+      - 同一用例连续执行 3 次，采集到的节点数与指纹集合完全一致
+
+  - id: P2
+    given: 一个语义定位匹配到多个元素
+    when: 执行定位（strict mode）
+    then: 引擎立即报错并明确命中数量，不静默选第一个
+    verify: unit
+    suspect: false
+    invariants:
+      - 命中数 N 时，报错信息包含 N，且未对任一元素执行操作
+
+  - id: P3
+    given: 需按角色 / 名称定位控件
+    when: 执行定位
+    then: 使用基于 AX 树的语义定位（等价 getByRole / getByLabel），保持 AX 为 ground truth
+    verify: ax
+    suspect: false
+
+  - id: P4
+    given: 一个期望（如列表恰好 N 行）
+    when: 执行断言（web-first 可重试）
+    then: 失败信息含定位器 / 实际值 / 期望值；结果带来源与置信度
+    verify: unit
+    suspect: false
+    invariants:
+      - 实际值偏差时，错误信息同时给出期望与实际，可被第三方复核
+
+  - id: P5
+    given: 一次执行
+    when: 运行结束
+    then: 产出可回放轨迹（逐帧交互 + AX 快照），作为取证载体
+    verify: unit
+    suspect: false
+
+  - id: P6
+    given: 需要枚举页面可见消息
+    when: 执行枚举遍（AX 树为源）
+    then: 仍从 AX 树取数，截图仅用于 AX 盲区并标 confidence=medium + 写 degradation
+    verify: ax
+    suspect: false
+    invariants:
+      - 与裸 CDP 版采集相比，同一页面产出的指纹集合（role|norm(name)）一致
+
+  - id: P7
+    given: 一个 contract.yaml（入口 A）
+    when: 执行启动
+    then: 引擎按契约条目驱动，每条 given/when/then 产出带证据等级的验证结果
+    verify: unit
+    suspect: false
+
+  - id: P8
+    given: 用户直接提供的测试用例（无 contract.yaml，入口 B）
+    when: 执行启动
+    then: 归一化后用同一引擎驱动，执行纪律与入口 A 一致
+    verify: unit
+    suspect: false
+
+  - id: P9
+    given: 本次变更合并
+    when: 对原生 App 场景执行
+    then: ax-native 适配器行为无任何变化
+    verify: unit
+    suspect: false
+
+out_of_scope:
+  - MCP server 封装（形态 B）
+  - action 缓存 / 失败自愈（形态 C）
+  - 改写 OpenSpec 需求或 SpecGate 契约定义
+  - ax-native 适配器的 Playwright 实现
+
+uses:
+  components: []
+  api: []
+  tokens: []
+
+breaks: []
+
+states: []
