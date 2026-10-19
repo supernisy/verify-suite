@@ -50,6 +50,14 @@ type: tool
    - SpecGate：检查 `specgate` CLI 是否可用（`node <specgate>/src/cli.js lint <契约>`）；没有就引导 clone [supernisy/specgate](https://github.com/supernisy/specgate) 或走 Agent skill。
    - 拿不到工具时，入口 A 仍可**手动按模板**写 `spec.md` / `contract.yaml`（见 `docs/ui-testing/templates/`）。
 
+3. **执行环境是否就绪**（入口 A / 入口 B **都需要**）：verify-suite 的浏览器执行引擎基于 **Playwright**，目标机器必须装有 `playwright` 及其浏览器二进制（约 150MB）。
+   - 先确认是否可用：检查 `npx playwright --version` 或 `node -e "require('playwright')"` 是否通过；浏览器二进制是否就绪（`npx playwright install --dry-run` 或等价探测）。
+   - **若未安装，先引导用户安装，不要硬跑**：
+     - 仓库内：`cd adapters/web-cdp && npm i`（含 `playwright` 依赖）→ `npx playwright install`（下载浏览器二进制）。
+     - 用户本地无 Node：给出最简指令，或让用户在自己环境按上面装好后再把目标交给我们。
+   - 离线 / 无外网环境：需提前缓存浏览器二进制，否则执行会失败——这种场景先和用户确认能否提供可访问的镜像或已装环境。
+   - 原生 App 场景走 `adapters/ax-native/`，不走 Playwright，无需上述步骤。
+
 > 详细确认与获取方式见 [`docs/ui-testing/WORKFLOW.md` §0.5](../../docs/ui-testing/WORKFLOW.md)。
 
 ### 第 1–2 步：入口 A · 完整链路（OpenSpec + SpecGate）
