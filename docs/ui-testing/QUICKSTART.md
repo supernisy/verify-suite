@@ -21,6 +21,8 @@
 1. **需求驱动**：只做需求要的；AX 树能拿到的字段就不截图，需求说"只取文字"就绝不截图。
 2. **确定性 + 可溯源**：无障碍树（AX）是唯一真相源，模型只做解释/补位；每个输出字段都带 `来源 + 置信度`（`ax-tree=high` / `screenshot=medium`）。
 
+> 💡 **执行层架构立场**：这台"执行引擎"的浏览器驱动**直接复用 Playwright 官方库**（commodity），我们**不自研驱动封装**——"手脚"用业界现成轮子，"大脑"（判定什么算对、凭什么信）才是我们的护城河：specgate 的契约 + 证据等级 + 完整性断言 + 安全边界。
+
 整条链路（UI 无关部分完全通用，只有"选型/序列化/交互"是目标特定的适配器）：
 
 ```
@@ -39,7 +41,7 @@
 | 路径                                          | 作用                                                     |
 | ------------------------------------------- | ------------------------------------------------------ |
 | `docs/ui-testing/`                          | 方法论 + 4 类模板 + 本指南 + AI 交接报告                            |
-| `adapters/web-cdp/`                         | **主适配器** Web/CDP 采集骨架（生产实现复用 `scripts/ax-collect.mjs`） |
+| `adapters/web-cdp/`                         | **主适配器** Web 采集：通用 UI 测试走 `scripts/ax-collect-pw.mjs`（直接调用 Playwright 官方库，不自研驱动），前端还原度走 `scripts/ax-collect.mjs`（CDP） |
 | `adapters/ax-native/`                       | **扩展适配器** 原生桌面 App 采集骨架                                |
 | `examples/general-ui/`                      | 虚构 Web 应用「AcmeHR」端到端示例（不绑微信）                           |
 | `openspec/specs/general-ui-testing/spec.md` | OpenSpec 能力 spec                                       |
@@ -129,6 +131,6 @@ AI 就会自动走完：**OpenSpec 锁需求 → SpecGate 定契约（含 lint�
 | -------------- | ---------------------------------------------------------------------- |
 | 想懂方法论全貌        | `docs/ui-testing/methodology.md`                                       |
 | 要写新 UI 测试，照模板填 | `docs/ui-testing/templates/`（OpenSpec / spec gate / 序列化 schema / 交互计划） |
-| 要接真实浏览器        | `scripts/ax-collect.mjs`（生产实现）或 `adapters/web-cdp/ax-collect.py`（骨架）   |
+| 要接真实浏览器        | 通用 UI 测试：`scripts/ax-collect-pw.mjs`（直接调 Playwright 官方库）；前端还原度：`scripts/ax-collect.mjs`（CDP）或 `adapters/web-cdp/ax-collect.py`（骨架） |
 | 要接原生桌面 App     | `adapters/ax-native/ax-collect.py`                                     |
 | 给开发 AI 派活      | `docs/ui-testing/AGENT-HANDOFF.md`                                     |

@@ -272,6 +272,8 @@ SpecGate CLI 根目录：`<specgate>`（**路径不固定**，需按你的环境
 - **入口 B · 轻量模式**：用户直接给测试用例（自然语言 / 表格 / 截图描述），**不需要 OpenSpec / SpecGate、不需要 `contract.yaml`** → AI 归一化为执行计划 → 直接调同一套 verify-suite 执行引擎 → 出报告。详见 §13。
 
 衔接点（两入口共用）：Phase ④ 执行引擎就是本仓库——读 `acceptance/<cap>/contract.yaml`（入口 A）或归一化 `执行计划`/`cases.md`（入口 B）→ 选适配器（`web-cdp` / `ax-native`）→ 序列化（枚举遍只读 AX、富化遍只补盲区）→ observe / drive → 对照输入出报告。
+
+⚠️ **执行层架构立场（已通过 OpenSpec `adopt-industry-drivers` 变更定稿）**：`web-cdp` 适配器**直接调用 Playwright 官方库**（`scripts/ax-collect-pw.mjs`），**不自研驱动封装**，也不写等价 driver；现成轮子可插拔（如 `@playwright/mcp`、Stagehand）。**后续若需增强执行能力，优先接入现成引擎，不要在验证层之外自研驱动**——我们的护城河在 specgate 的「契约 + 证据等级 + 完整性断言 + 安全边界」，不在驱动。
 示例契约 [`acceptance/ui-testing/contract.yaml`](../../acceptance/ui-testing/contract.yaml) 已 `specgate lint` 过关（退出码 0），可作为模板。
 
 ### 12.3 仓库维护者注意（已完成）

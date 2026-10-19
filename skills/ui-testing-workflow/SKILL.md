@@ -50,7 +50,7 @@ type: tool
    - SpecGate：检查 `specgate` CLI 是否可用（`node <specgate>/src/cli.js lint <契约>`）；没有就引导 clone [supernisy/specgate](https://github.com/supernisy/specgate) 或走 Agent skill。
    - 拿不到工具时，入口 A 仍可**手动按模板**写 `spec.md` / `contract.yaml`（见 `docs/ui-testing/templates/`）。
 
-3. **执行环境是否就绪**（入口 A / 入口 B **都需要**）：verify-suite 的浏览器执行引擎基于 **Playwright**，目标机器必须装有 `playwright` 及其浏览器二进制（约 150MB）。
+3. **执行环境是否就绪**（入口 A / 入口 B **都需要**）：verify-suite 的浏览器执行引擎基于 **Playwright**，目标机器必须装有 `playwright` 及其浏览器二进制（约 150MB）。执行层**直接调用 Playwright 官方库（commodity），不自研驱动封装**；我们的差异化在「契约 / 证据 / 断言」验证层，不在驱动。
    - 先确认是否可用：检查 `npx playwright --version` 或 `node -e "require('playwright')"` 是否通过；浏览器二进制是否就绪（`npx playwright install --dry-run` 或等价探测）。
    - **若未安装，先引导用户安装，不要硬跑**：
      - 仓库内：`cd adapters/web-cdp && npm i`（含 `playwright` 依赖）→ `npx playwright install`（下载浏览器二进制）。

@@ -17,10 +17,12 @@ verify-suite 目前承载**两条能力**：
 
 本次交付物：
 - **方法论 + 4 套模板**：[`docs/ui-testing/methodology.md`](./docs/ui-testing/methodology.md)、[`docs/ui-testing/templates/`](./docs/ui-testing/templates/)（OpenSpec spec / specgate 契约 / 序列化 schema / 交互计划）
-- **适配器**：浏览器主适配器 `adapters/web-cdp/`（生产实现 `scripts/ax-collect.mjs`）、原生 App 扩展适配器 `adapters/ax-native/`
+- **适配器**：浏览器主适配器 `adapters/web-cdp/`——通用 UI 测试走 Playwright 采集器 `scripts/ax-collect-pw.mjs`（直接调用 Playwright 官方库，非自研驱动），前端还原度走 CDP 采集器 `scripts/ax-collect.mjs`；原生 App 扩展适配器 `adapters/ax-native/`
 - **虚构端到端示例**：[`examples/general-ui/`](./examples/general-ui)（AcmeHR Web，走 CDP/AX，不绑定真实产品）
 - **需求与契约**：[`openspec/specs/general-ui-testing/spec.md`](./openspec/specs/general-ui-testing/spec.md)、[`acceptance/ui-testing/contract.yaml`](./acceptance/ui-testing/contract.yaml)（已 `specgate lint` 过关）
 - **封装好的 Skill**：[`skills/ui-testing-workflow/SKILL.md`](./skills/ui-testing-workflow/SKILL.md)（见下）
+
+> **执行层架构立场**：浏览器驱动**直接复用 Playwright 官方库**（commodity），不自研驱动封装；本项目的护城河在「契约 + 证据等级 + 完整性断言 + 安全边界」这一验证层（详见 `openspec/specs/playwright-web-driver/spec.md` 的 No In-House Driver 约束，经 `adopt-industry-drivers` 变更定稿）。
 
 设计灵魂两条不可妥协：**① 需求驱动**（只做需求要的、只在盲区降级）；**② 确定性 + 可溯源**（AX 树为主、LLM 只解释、每个字段带证据等级 `source` + `confidence`）。
 
