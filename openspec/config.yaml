@@ -5,24 +5,14 @@ context: |
   All artifacts must be written in Chinese.
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+# 变更制品规则：每个 change 必须自带「同步对外文档」项，从根上防文档漂移
+rules:
+  tasks:
+    - 每个 change 的 tasks.md 必须包含一条「同步对外文档」项，列出本次需更新的对外文档（README.md / docs/ui-testing/QUICKSTART.md / docs/ui-testing/AGENT-HANDOFF.md / skills/ui-testing-workflow/SKILL.md）；若无对外影响，显式写「无需更新文档」。
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+# 归档前纪律：对外文档须与本次变更一致（OpenSpec 原生机制，卡在 archive 这一步）
+operations:
+  archive:
+    guidance:
+      - 归档前核对对外文档（README.md / docs/ui-testing/QUICKSTART.md / docs/ui-testing/AGENT-HANDOFF.md / skills/ui-testing-workflow/SKILL.md）是否与本次变更一致；若变更涉及能力 / 行为 / 架构（如执行引擎、契约、入口），必须同 PR 补改这些文档。
+      - 行为 / 架构事实（如「执行层复用 Playwright 官方库、不自研 driver」）以 openspec/specs/**/spec.md 为唯一事实来源，对外文档只引用（链接到 spec）不复述，避免再次漂移。

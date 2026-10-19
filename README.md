@@ -18,7 +18,7 @@ verify-suite 目前承载**两条能力**：
 本次交付物：
 - **方法论 + 4 套模板**：[`docs/ui-testing/methodology.md`](./docs/ui-testing/methodology.md)、[`docs/ui-testing/templates/`](./docs/ui-testing/templates/)（OpenSpec spec / specgate 契约 / 序列化 schema / 交互计划）
 - **适配器**：浏览器主适配器 `adapters/web-cdp/`——通用 UI 测试走 Playwright 采集器 `scripts/ax-collect-pw.mjs`（直接调用 Playwright 官方库，非自研驱动），前端还原度走 CDP 采集器 `scripts/ax-collect.mjs`；原生 App 扩展适配器 `adapters/ax-native/`
-- **虚构端到端示例**：[`examples/general-ui/`](./examples/general-ui)（AcmeHR Web，走 CDP/AX，不绑定真实产品）
+- **虚构端到端示例**：[`examples/general-ui/`](./examples/general-ui)（AcmeHR Web 端到端，以 AX 树为主，不绑定真实产品）
 - **需求与契约**：[`openspec/specs/general-ui-testing/spec.md`](./openspec/specs/general-ui-testing/spec.md)、[`acceptance/ui-testing/contract.yaml`](./acceptance/ui-testing/contract.yaml)（已 `specgate lint` 过关）
 - **封装好的 Skill**：[`skills/ui-testing-workflow/SKILL.md`](./skills/ui-testing-workflow/SKILL.md)（见下）
 
