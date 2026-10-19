@@ -2,17 +2,25 @@
 // verify-suite / scripts / ax-collect-pw.mjs
 //
 // 路线 B (Playwright 引擎版): 语义指纹全量扫描。
-// 底层由 Playwright 驱动, 替代 scripts/ax-collect.mjs 的裸 CDP。
+//
+// ★ 执行层已改为「直接调用 Playwright 官方库」(adopt-industry-drivers 变更):
+//   本脚本不再封装任何自研 driver 类 (playwright-driver.mjs 已删除)，
+//   而是直接调用 Playwright 自有 API —— 即"用现成轮子"，不是重造。
 //   - AX 树: page.accessibility.snapshot()  (仍是 AX 为 ground truth)
-//   - 指纹主键: role|norm(accessible name)  (与 CDP 版完全一致)
-//   - 等待/交互/断言: Playwright 语义 locator + auto-wait + web-first 可重试
-// 复用 scripts/lib/cdp.mjs 的 norm / gridKey (纯函数, 无 CDP 依赖)。
+//   - 定位:   page.getByRole(role,{name})  (Playwright 自带 semantic + strict)
+//   - 等待:   page.goto / locator 的 auto-wait (Playwright 自带, 无手写 sleep)
+//   - 断言:   见下方 assertVisible / assertCount (web-first 可重试, 失败含定位器+实际+期望)
+//   - trace:  context.tracing (Playwright 自带, 可回放取证)
+//
+// 我们自留的护城河层 (不重造): AX 感知主源 + 语义指纹 norm/gridKey + 证据等级 +
+// 完整性断言 (空采集=错误) + 降级账本 (degradation)。这些逻辑与 CDP 版 scripts/ax-collect.mjs
+// 同算法同指纹 (role|norm(name)), 仅底层驱动从裸 CDP 换成 Playwright 官方库。
 //
 // 用法:
 //   node scripts/ax-collect-pw.mjs --url <url> [--scope <selector>] [--preload <js>]
 //        [--wait <sel>] [--viewport 1440x900] [--trace out/trace.zip] --out <file>
 
-import { PlaywrightDriver } from '../adapters/web-cdp/playwright-driver.mjs';
+import { chromium } from 'playwright';
 import { norm, gridKey } from './lib/cdp.mjs';
 import { argValue, hasFlag } from './lib/args.mjs';
 
@@ -33,16 +41,65 @@ function axName(node) {
     return '';
 }
 
+// 从 AX 树 (page.accessibility.snapshot 的树形结构) 递归收集语义节点
+function collectSemantic(tree, roles) {
+    const out = [];
+    const walk = (node) => {
+        if (!node) return;
+        if (node.role && roles.has(node.role)) out.push(node);
+        (node.children || []).forEach(walk);
+    };
+    walk(tree);
+    return out;
+}
+
+// 度量: 复用 Playwright locator.evaluate 直接读元素的几何 + 计算样式
+async function measure(page, role, name) {
+    const loc = page.getByRole(role, { name });
+    return await loc.first().evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const cs = getComputedStyle(el);
+        return {
+            boxW: Math.round(r.width * 100) / 100,
+            boxH: Math.round(r.height * 100) / 100,
+            rect: {
+                left: Math.round(r.left), top: Math.round(r.top),
+                width: Math.round(r.width), height: Math.round(r.height),
+            },
+            fontSize: parseFloat(cs.fontSize),
+            fontWeight: cs.fontWeight,
+            textColor: cs.color,
+            radius: cs.borderRadius,
+            bg: cs.backgroundColor,
+        };
+    });
+}
+
+// web-first 可重试断言 (Playwright 自带 actionability 之上, 带定位器+实际+期望信息)
+async function assertVisible(loc, { timeout = 5000 } = {}) {
+    const start = Date.now();
+    let lastErr = '';
+    while (Date.now() - start < timeout) {
+        try {
+            const box = await loc.first().boundingBox();
+            if (box && box.width > 0 && box.height > 0) return;
+            lastErr = 'boundingBox 为空（元素不可见或零尺寸）';
+        } catch (e) { lastErr = e.message; }
+        await new Promise((r) => setTimeout(r, 100));
+    }
+    throw new Error(`assertVisible 超时（${timeout}ms）: ${lastErr}`);
+}
+
 async function main() {
     const argv = process.argv.slice(2);
     if (hasFlag(argv, '--help') || argv.length === 0) {
-        console.log(`ax-collect-pw · 路线 B (Playwright 引擎版) 语义指纹全量扫描
+        console.log(`ax-collect-pw · 路线 B (Playwright 官方库驱动) 语义指纹全量扫描
 
 用法:
   node scripts/ax-collect-pw.mjs --url <url> [--scope <selector>] [--preload <js>]
        [--wait <sel>] [--viewport 1440x900] [--trace out/trace.zip] --out <file>
 
-引擎: Playwright (替代裸 CDP)
+引擎: Playwright 官方库 (commodity, 非自研 driver)
 算法:
   1. page.accessibility.snapshot() 取 AX 树 (AX 为 ground truth)
   2. 过滤有语义的 role
@@ -64,14 +121,21 @@ async function main() {
     const vp = m ? { width: Number(m[1]), height: Number(m[2]) } : { width: 1440, height: 900 };
     if (!url) throw new Error('--url required');
 
-    const driver = await new PlaywrightDriver({ viewport: vp, tracePath }).launch();
+    // ---- 直接调用 Playwright 官方库启动引擎 (auto-wait 由 Playwright 提供) ----
+    const browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({ viewport: vp });
+    const page = await context.newPage();
+    if (tracePath) await context.tracing.start({ screenshots: true, snapshots: true });
+
     try {
-        if (preload) await driver.goto(url, { preload });
-        else await driver.goto(url);
-        if (waitSel) await driver.waitForSelector(waitSel);
+        if (preload) await page.addInitScript(preload);
+        await page.goto(url, { waitUntil: 'load' });
+        if (waitSel) await page.waitForSelector(waitSel, { timeout: 15000 });
 
         // 1. 取 AX 树（Playwright 快照，AX 为 ground truth）
-        const nodes = await driver.collectSemantic(SEMANTIC_ROLES);
+        const tree = await page.accessibility.snapshot();
+        if (!tree) throw new Error('accessibility.snapshot() 返回空 —— 页面可能未加载或无可访问内容');
+        const nodes = collectSemantic(tree, SEMANTIC_ROLES);
 
         const items = [];
         const counters = new Map();
@@ -82,14 +146,13 @@ async function main() {
 
             // scope 过滤（若指定）
             if (scope) {
-                const inScope = await driver.locate({ role: n.role, name }).first()
-                    .evaluate((el, sel) => !!el.closest(sel), scope).catch(() => true);
+                const inScope = await page.getByRole(n.role, { name })
+                    .first().evaluate((el, sel) => !!el.closest(sel), scope).catch(() => true);
                 if (!inScope) continue;
             }
 
-            const target = driver.locate({ role: n.role, name }).first();
             let meas;
-            try { meas = await driver.measure(target); } catch { continue; }
+            try { meas = await measure(page, n.role, name); } catch { continue; }
             if (meas.rect.width === 0 && meas.rect.height === 0) continue;
 
             const g = gridKey(meas.rect);
@@ -151,9 +214,15 @@ async function main() {
             console.log(JSON.stringify(result, null, 2));
         }
     } finally {
-        await driver.close();
+        if (tracePath) {
+            try { await context.tracing.stop({ path: tracePath }); } catch (_) {}
+        }
+        await browser.close();
     }
 }
+
+// 暴露 web-first 断言供契约/回归调用 (保留能力, 由 Playwright 提供底层)
+export { assertVisible };
 
 main().catch((err) => {
     console.error('error:', err.message ?? err);

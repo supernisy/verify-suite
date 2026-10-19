@@ -17,15 +17,18 @@ verify-suite 的**主适配器**：浏览器 / Web 场景走 CDP + Accessibility
 - 截图补位只用于 AX 盲区：canvas / 自定义控件 / 纯视觉校验；
 - 与 verify-suite 路线 B「语义指纹」同源，主键复用 `role|文案`。
 
-## Playwright 引擎（可选替换 CDP）
+## Playwright 引擎（直接调用官方库，非自研 driver）
 
-`adapters/web-cdp/playwright-driver.mjs` 提供与裸 CDP **等价但更稳**的驱动层：
-auto-wait（自动等元素可操作）、strict mode（多命中即报错不盲选）、语义定位
-`getByRole`/`getByLabel`（基于 AX 树）、web-first 可重试断言、Trace 可回放证据。
-AX 树仍是感知主源（`page.accessibility.snapshot()`），截图仅补 AX 盲区。
+`adapters/web-cdp/playwright-driver.mjs` 已删除（adopt-industry-drivers 变更）。
+执行层不再自研任何驱动封装，而是**直接调用 Playwright 官方库**（commodity），
+由 Playwright 原生提供 auto-wait / strict mode / 语义定位 `getByRole` / web-first
+断言 / Trace 回放。我们的自留层只有 **AX 感知主源 + 语义指纹 + 证据等级 + 完整性断言 +
+降级账本**（见 `scripts/ax-collect-pw.mjs`），这些与裸 CDP 版 `scripts/ax-collect.mjs`
+**同算法、同指纹**（`role|norm(name)`），仅底层驱动从裸 CDP 换成 Playwright。
 
-对应采集器 `scripts/ax-collect-pw.mjs` 与原 `scripts/ax-collect.mjs` **同算法、同指纹**
-（`role|norm(name)`），仅把底层驱动从 CDP 换成 Playwright。
+- 现成轮子可插拔：`@playwright/mcp`（官方 MCP 桥）或 Stagehand 可作为等价替换，
+  无需改动验证 / 契约层。
+- AX 树仍是感知主源（`page.accessibility.snapshot()`），截图仅补 AX 盲区。
 
 ## 用法
 

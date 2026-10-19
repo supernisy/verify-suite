@@ -190,8 +190,8 @@ def demo():
 
 
 # ---------------------------------------------------------------------------
-# Playwright 变体（与 playwright-driver.mjs 同构，零侵入替换 CDP）
-# 仅骨架：演示 API 等价映射；生产实现见 adapters/web-cdp/playwright-driver.mjs。
+# Playwright 变体（直接调用 Playwright 官方库，零侵入替换 CDP）
+# 仅骨架：演示 API 等价映射；生产实现见 scripts/ax-collect-pw.mjs。
 # 需要: pip install playwright && playwright install chromium
 # ---------------------------------------------------------------------------
 class PlaywrightDriver:
@@ -218,7 +218,7 @@ class PlaywrightDriver:
         #   self._browser = self._pw.chromium.launch(headless=self.headless)
         #   ctx = self._browser.new_context(viewport={"width": self.viewport[0], "height": self.viewport[1]})
         #   self.page = ctx.new_page()
-        raise NotImplementedError("目标特定逻辑未实现：接入 Playwright（见 adapters/web-cdp/playwright-driver.mjs）。")
+        raise NotImplementedError("目标特定逻辑未实现：接入 Playwright（见 scripts/ax-collect-pw.mjs）。")
 
     def get_ax_tree(self):
         # TODO: return self.page.accessibility.snapshot()

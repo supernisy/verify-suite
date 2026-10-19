@@ -7,7 +7,11 @@
 ## Requirements
 
 ### Requirement: 浏览器执行引擎（Engine）
-系统 SHALL 以具备 auto-wait 能力的浏览器自动化引擎驱动 `web-cdp` 适配器，替代裸 CDP 直接调用。
+系统 SHALL 通过**集成现成执行引擎**（优先 Playwright MCP，可选 Stagehand）驱动 `web-cdp` 适配器，替代裸 CDP 与自研 `playwright-driver.mjs`，禁止自研等价驱动实现。能力（auto-wait / strict mode / 语义定位 / web-first 断言 / Trace）保持为需求，仅实现来源从自研改为现成。
+
+#### Scenario: 采用现成执行引擎而非自研
+- **WHEN** 需要浏览器 auto-wait / strict mode / 语义定位 / web-first 断言 / Trace 能力
+- **THEN** 直接复用 Stagehand 或 Playwright MCP 提供的等价能力，不自行实现驱动逻辑
 
 #### Scenario: auto-wait 消除手忙脚乱的等待
 - **WHEN** 对一个异步渲染（如回车后 300ms 才出现）的元素执行 observe / drive
@@ -53,3 +57,10 @@
 #### Scenario: ax-native 行为不变
 - **WHEN** 本次变更合并
 - **THEN** 对原生 App 场景执行时，`ax-native` 适配器行为无任何变化
+
+### Requirement: 执行引擎选型遵循现成优先（No In-House Driver）
+系统 MUST 在执行层优先复用业界已验证的 commodity 能力；仅当现成方案无法满足「契约驱动 + 证据等级 + 完整性断言 + 安全边界」这一护城河层需求时，才允许在验证层自研。
+
+#### Scenario: 缺失能力才自研
+- **WHEN** 某执行能力现成轮子已覆盖
+- **THEN** 直接接入，不重写；自研仅限验证 / 契约 / 证据层
